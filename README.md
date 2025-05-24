@@ -1,6 +1,11 @@
 # AI Loyalty Maximizer Suite - AWS Reference Architecture
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+---
+**🚧 This Architecture is Actively Under Development 🚧**
+
+This reference architecture is a living document and is being actively built out. You are viewing a work in progress. New sections, details, and diagrams are being added regularly. Your understanding and patience are appreciated! Check back often for updates.
+
+---
 
 ## Overview
 
@@ -11,16 +16,25 @@ Welcome to the **AI Loyalty Maximizer Suite** repository! This project presents 
 
 ## Purpose
 
-This repository serves as a **portfolio piece and a detailed architectural blueprint**, showcasing the design of a sophisticated, cloud-native application built primarily on Amazon Web Services (AWS) managed services. It demonstrates advanced concepts in AI application development, solution architecture, and cloud engineering.
+This repository serves as a **portfolio piece and a detailed architectural blueprint**, showcasing the design of a sophisticated, cloud-native application built primarily on Amazon Web Services (AWS) managed services. It demonstrates advanced concepts in AI application development, solution architecture, data engineering, and cloud engineering.
 
-The focus is on the architectural design, decision-making processes, and integration of modern technologies to solve a complex, real-world-inspired problem.
+The focus is on the architectural design, decision-making processes, and integration of modern technologies to solve a complex, real-world-inspired problem, including intelligent automation for knowledge base creation.
 
 ## Key Features & Technologies Showcased
 
 * **Artificial Intelligence (AI):** Core of the solution.
-* **Large Language Models (LLMs):** Serving as the primary orchestrator for user interaction and tool invocation (e.g., leveraging models via Amazon Bedrock).
+* **Large Language Models (LLMs):**
+    * Serving as the primary orchestrator for user interaction and tool invocation (e.g., leveraging models via Amazon Bedrock).
+    * Utilized for advanced information extraction from diverse, semi-structured source documents (web pages, PDFs) to populate the knowledge base.
 * **Model Context Protocol (MCP):** Conceptual framework for LLMs to interact with specialized tools and agents.
 * **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Utilizing graph databases (e.g., Amazon Neptune) combined with RAG techniques for accessing and reasoning over complex airline loyalty data.
+* **Intelligent Data Ingestion & ETL Pipeline:**
+    * Automated processing of manually gathered source documents (HTML, PDF, text).
+    * **Amazon S3:** Landing zone for raw and processed data.
+    * **Amazon Textract:** For OCR and table/form extraction from PDF/image documents.
+    * **AWS Glue:** For complex ETL, data transformation, and applying Python-based parsing logic (including LLM integration for extraction).
+    * **AWS Step Functions:** Orchestrating the multi-stage data ingestion and graph population pipeline.
+    * **(Potentially) Amazon Athena:** For validating intermediate extracted data.
 * **Serverless Architecture:** Prioritizing AWS Lambda, API Gateway, Step Functions, DynamoDB, and S3 for scalability and cost-effectiveness.
 * **Cloud-Native on AWS:** Deep integration with a wide array of AWS managed services.
 * **Comprehensive Architectural Design:** Including C4 modeling for software views, supplemented by enterprise architectural perspectives (Process, Physical/Deployment, Development).
@@ -28,7 +42,7 @@ The focus is on the architectural design, decision-making processes, and integra
 
 ## Architectural Approach
 
-The architecture detailed herein utilizes the **C4 model** (Context, Containers, Components) for its clarity in depicting software structure. This is augmented by broader **enterprise architectural views**—including Process, Physical (Deployment), and Development perspectives—to provide a holistic understanding suitable for complex, scalable systems. This multi-view approach ensures all key concerns, from high-level business drivers to detailed AWS service implementation, are addressed.
+The architecture detailed herein utilizes the **C4 model** (Context, Containers, Components) for its clarity in depicting software structure. This is augmented by broader **enterprise architectural views**—including Process, Physical (Deployment), and Development perspectives—to provide a holistic understanding suitable for complex, scalable systems. A key aspect of the design is the **AI-driven, automated pipeline for ingesting and transforming varied source data** into a structured knowledge graph, minimizing manual data entry and enhancing adaptability.
 
 ---
 
@@ -42,14 +56,13 @@ The architecture detailed herein utilizes the **C4 model** (Context, Containers,
 The complete architectural documentation is extensive and organized into several files for clarity.
 
 * **Full Architectural Documentation:**
-    * The primary, detailed architectural specification can be found in:
-        * [`/docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) (This will be the main entry point that strings together or links to all other documentation sections).
-    * *Alternatively, if you break it down further:*
+    * The primary, detailed architectural specification will be structured across multiple markdown files within the [`/docs`](./docs) directory. An overarching `ARCHITECTURE_OVERVIEW.md` or similar within `/docs` will serve as the main entry point that strings together or links to all other documentation sections.
+    * Example structure:
         * Introduction: [`/docs/01_INTRODUCTION.md`](./docs/01_INTRODUCTION.md)
         * Business Context: [`/docs/02_BUSINESS_CONTEXT_AND_REQUIREMENTS.md`](./docs/02_BUSINESS_CONTEXT_AND_REQUIREMENTS.md)
         * ... and so on for all sections as per our agreed structure.
 * **Architectural Diagrams:**
-    * All diagrams (C4, AWS deployment, data flows, etc.) are located in the [`/diagrams`](./diagrams) directory.
+    * All diagrams (C4, AWS deployment, data flows, pipeline diagrams, etc.) are located in the [`/diagrams`](./diagrams) directory.
 * **Architecture Decision Records (ADRs):**
     * Key design decisions and their rationale are documented in the [`/adr`](./adr) directory.
 
