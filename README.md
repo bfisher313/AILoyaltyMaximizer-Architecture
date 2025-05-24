@@ -1,9 +1,20 @@
 # AI Loyalty Maximizer Suite - AWS Reference Architecture
 
 ---
+
 **🚧 This Architecture is Actively Under Development 🚧**
 
 This reference architecture is a living document and is being actively built out. You are viewing a work in progress. New sections, details, and diagrams are being added regularly. Your understanding and patience are appreciated! Check back often for updates.
+
+---
+
+## Copyright and Usage
+
+© 2025 Brian Fisher. All Rights Reserved.
+
+The content of this repository, including all architectural documents, diagrams, and descriptions, is proprietary and shared for portfolio review and demonstration purposes only. You are welcome to view and discuss this work in that context.
+
+No part of this repository may be reproduced, distributed, copied, or used for any commercial purposes, or to create derivative works, without the explicit prior written permission of the author.
 
 ---
 
@@ -58,29 +69,27 @@ The architecture detailed herein utilizes the **C4 model** (Context, Containers,
 
 ## Navigating This Repository
 
+T## Navigating This Repository
+
 The complete architectural documentation is extensive and organized into several files for clarity.
 
-* **Full Architectural Documentation:**
-    * The primary, detailed architectural specification will be structured across multiple markdown files within the [`/docs`](./docs) directory. An overarching `ARCHITECTURE_OVERVIEW.md` or similar within `/docs` will serve as the main entry point that strings together or links to all other documentation sections.
-    * Example structure:
-        * Introduction: [`/docs/01_INTRODUCTION.md`](./docs/01_INTRODUCTION.md)
-        * Business Context: [`/docs/02_BUSINESS_CONTEXT_AND_REQUIREMENTS.md`](./docs/02_BUSINESS_CONTEXT_AND_REQUIREMENTS.md)
-        * ... and so on for all sections as per our agreed structure.
+* **Start Here for Full Documentation:**
+  * The **[Architecture Overview & Table of Contents](./docs/00_ARCHITECTURE_OVERVIEW.md)** provides a guide to the entire architectural specification and links to all detailed sections.
 * **Architectural Diagrams:**
-    * All diagrams (C4, AWS deployment, data flows, pipeline diagrams, etc.) are located in the [`/diagrams`](./diagrams) directory.
+  * All diagrams (C4, AWS deployment, data flows, pipeline diagrams, etc.) are located in the [`/diagrams`](./diagrams) directory.
 * **Architecture Decision Records (ADRs):**
-    * Key design decisions and their rationale are documented in the [`/adr`](./adr) directory.
+  * Key design decisions and their rationale are documented in the [`/adr`](./adr) directory.
 
 ## Author
 
-* **[Your Name]**
-    * GitHub: `https://github.com/[Your GitHub Username]`
-    * LinkedIn: `[Your LinkedIn Profile URL (Optional)]`
+* **Brian Fisher**
+    * GitHub: `https://github.com/bfisher313`
+    * LinkedIn: `https://www.linkedin.com/in/brian-p-fisher/`
 
 ## Disclaimer
 
 This is a conceptual portfolio project. The architecture and features described are for demonstration purposes and to showcase design thinking. While inspired by real-world airline loyalty programs, the data models and rules presented are illustrative. Any resemblance to specific, proprietary airline systems or data is coincidental.
 
-## Contributing (Optional)
+## Contributing
 
 As this is primarily a personal portfolio project, contributions are not actively sought at this time. However, feedback and suggestions are always welcome via Issues or direct contact.
