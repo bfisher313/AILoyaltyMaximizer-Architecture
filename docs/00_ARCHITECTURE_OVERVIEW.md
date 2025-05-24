@@ -1,9 +1,7 @@
----
 
 **🚧 This Architecture is Actively Under Development 🚧**
 
 This reference architecture is a living document and is being actively built out. You are viewing a work in progress. New sections, details, and diagrams are being added regularly. Your understanding and patience are appreciated! Check back often for updates.
-
 
 ---
 
