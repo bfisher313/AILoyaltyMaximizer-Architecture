@@ -46,8 +46,13 @@ The architecture detailed herein utilizes the **C4 model** (Context, Containers,
 
 ---
 
-**(Optional: Consider embedding a high-level System Context Diagram here once created)**
-*A high-level System Context diagram illustrating the AI Loyalty Maximizer Suite and its key interactions can be found [here](./diagrams/system_context_c4_high_level.png) (once created).*
+## System Context
+
+<p align="center">
+  <img src="./diagrams/system_context_c4_high_level.png" alt="AI Loyalty Maximizer Suite - System Context Diagram" width="400">
+</p>
+
+*Figure 1: High-level System Context diagram illustrating the AI Loyalty Maximizer Suite and its key interactions with users and external systems.*
 
 ---
 
@@ -79,8 +84,3 @@ This is a conceptual portfolio project. The architecture and features described 
 ## Contributing (Optional)
 
 As this is primarily a personal portfolio project, contributions are not actively sought at this time. However, feedback and suggestions are always welcome via Issues or direct contact.
-
-## License (Optional)
-
-This project is licensed under the MIT License - see the `LICENSE` file for details.
-*(Create a `LICENSE` file in your repo if you choose to include this. MIT is a common permissive license.)*
