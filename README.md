@@ -39,6 +39,7 @@ The focus is on the architectural design, decision-making processes, and integra
     * Utilized for advanced information extraction from diverse, semi-structured source documents (web pages, PDFs) to populate the knowledge base.
 * **Model Context Protocol (MCP):** Conceptual framework for LLMs to interact with specialized tools and agents.
 * **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Utilizing graph databases (e.g., Amazon Neptune) combined with RAG techniques for accessing and reasoning over complex airline loyalty data.
+* **AI Agents & Agentic Architecture:** Leveraging LLMs as orchestrating agents and specialized tools/functions as worker agents, particularly in the data ingestion pipeline and for query resolution.
 * **Intelligent Data Ingestion & ETL Pipeline:**
     * Automated processing of manually gathered source documents (HTML, PDF, text).
     * **Amazon S3:** Landing zone for raw and processed data.
