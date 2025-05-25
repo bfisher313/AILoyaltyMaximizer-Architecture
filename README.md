@@ -62,7 +62,7 @@ The architecture detailed herein utilizes the **C4 model** (Context, Containers,
 ## System Context
 
 <p align="center">
-  <img src="./diagrams/system_context_c4_high_level.png" alt="AI Loyalty Maximizer Suite - System Context Diagram" width="400">
+  <img src="diagrams_output/c4_model_renders/structurizr-SystemContext.png" alt="AI Loyalty Maximizer Suite - System Context Diagram" width="974">
 </p>
 
 *Figure 1: High-level System Context diagram illustrating the AI Loyalty Maximizer Suite and its key interactions with users and external systems.*
