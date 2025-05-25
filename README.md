@@ -69,8 +69,6 @@ The architecture detailed herein utilizes the **C4 model** (Context, Containers,
 
 ## Navigating This Repository
 
-T## Navigating This Repository
-
 The complete architectural documentation is extensive and organized into several files for clarity.
 
 * **Start Here for Full Documentation:**
