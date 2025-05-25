@@ -108,4 +108,261 @@ This diagram illustrates these primary containers, their core responsibilities, 
     * Receives triggers or notification requests from the `LLM Orchestration Service`.
     * Publishes messages to the `Notification Delivery Service (External)` (e.g., by sending an email via SES, an SMS via SNS, or interfacing with another external gateway).
 
-*(End of Container Descriptions)*
+## 3.4. Component Diagrams (C4 Level 3) - For Critical Containers
+
+Component diagrams provide a more detailed view by zooming into individual containers listed in the C4 Level 2 diagram. They illustrate the key internal components, modules, or classes within a container and their interactions.
+
+Developing detailed C4 Level 3 Component diagrams for each container is an extensive task. For the initial version of this architectural document, this section outlines the intent, and specific component diagrams for critical containers (such as the `LLM Orchestration Service` and the `Data Ingestion Pipeline Service`) will be developed in future iterations.
+
+* **LLM Orchestration Service - Components:** (To be detailed in a future iteration. Will include components like Intent Recognizer, Dialogue Manager, MCP Invoker, Response Synthesizer.)
+* **Data Ingestion Pipeline Service - Components:** (To be detailed in a future iteration. Will include components for different stages like Page Fetch/Pre-processing, Textract Interaction, LLM-based Information Extractor, Validation Logic, Graph Transformation.)
+
+## 3.5. Interface Definitions (Model Context Protocol - MCP Tools)
+
+The AI Loyalty Maximizer Suite relies on a **Model Context Protocol (MCP)** that defines how the central `LLM Orchestration Service` (acting as a Primary Reasoning Agent) interacts with specialized tools or worker agents. These tools are self-contained units of functionality that perform specific tasks, access data from other services, or execute business logic when invoked by the LLM Orchestrator.
+
+These tools are conceptually invoked with a defined request structure and are expected to return a response in a defined structure. In the AWS implementation, these would typically be realized as AWS Lambda functions, orchestrated via AWS Step Functions and triggered by the LLM Orchestration Service.
+
+Below are conceptual definitions for some of the key MCP tools:
+
+1.  **Tool: `get_user_profile`**
+
+    **Description:**
+    Retrieves the stored profile information for a given user, including their enrolled loyalty programs, current elite statuses, and any saved preferences or reward balances.
+
+    **Invoked by:**
+    `LLM Orchestration Service` (when personalization or user-specific context is needed).
+
+    **Interacts with (Data Source):**
+    `User Profile Service` (e.g., querying Amazon DynamoDB).
+
+    **Request (Conceptual JSON):**
+    ```json
+    {
+      "userId": "string"
+    }
+    ```
+
+    **Response (Conceptual JSON):**
+    ```json
+    {
+      "userId": "string",
+      "loyaltyPrograms": [
+        {
+          "programId": "string", // e.g., "UA_MileagePlus", "AA_AAdvantage"
+          "programName": "string", // e.g., "United MileagePlus"
+          "statusTier": "string",  // e.g., "Gold", "Platinum"
+          "redeemableBalance": {
+            "amount": "integer",
+            "currencyName": "string" // e.g., "Miles", "Points"
+          },
+          "eliteQualifyingMetrics": [
+            {
+              "metricName": "string", // e.g., "PQP", "LP", "EQM"
+              "currentValue": "integer",
+              "unit": "string" // e.g., "Points", "Miles"
+            }
+          ]
+        }
+      ],
+      "preferences": {
+        "preferredAirlines": ["string"],
+        "preferredAlliances": ["string"],
+        "homeAirport": "string"
+        // ... other preferences
+      }
+    }
+    ```
+
+2.  **Tool: `calculate_flight_earnings`**
+
+    **Description:**
+    Calculates the potential redeemable rewards currency (miles/points) and elite-qualifying metrics for a specific flight itinerary across one or more target loyalty programs.
+
+    **Invoked by:**
+    `LLM Orchestration Service` (when a user asks "how much will I earn for this flight?").
+
+    **Interacts with (Data Source):**
+    `Knowledge Base Service (GraphRAG)` (to retrieve earning rules, fare class multipliers, partner agreements).
+
+    **Request (Conceptual JSON):**
+    ```json
+    {
+      "flightItinerary": {
+        "segments": [
+          {
+            "marketingCarrier": "string", // e.g., "UA"
+            "operatingCarrier": "string", // e.g., "LH"
+            "flightNumber": "string",
+            "originAirport": "string", // e.g., "JFK"
+            "destinationAirport": "string", // e.g., "FRA"
+            "fareClass": "string", // e.g., "K"
+            "distanceMiles": "integer"
+          }
+        ],
+        "ticketPrice": { // Optional, for revenue-based programs or where spend is a factor
+          "baseFare": "float",
+          "carrierImposedSurcharges": "float", // YQ/YR fees that often count towards earnings
+          "taxesAndAirportFees": "float",    // Government/airport taxes & fees that usually don't
+          "totalFare": "float", // The grand total paid by the customer
+          "currency": "string" // e.g., "USD"
+        }
+      },
+      "userProfileContext": { // Optional: relevant parts of user's profile, e.g., status for bonuses
+        "userId": "string",
+        "statusTiers": [
+          { "programId": "string", "tier": "string" }
+        ]
+      },
+      "targetLoyaltyPrograms": ["programId1", "programId2"] // List of program IDs to calculate for
+    }
+    ```
+
+    **Response (Conceptual JSON):**
+    ```json
+    {
+      "earningOptions": [
+        {
+          "programId": "string",
+          "programName": "string",
+          "redeemableCurrency": {
+            "amountEarned": "integer",
+            "type": "string" // e.g., "Miles", "Points"
+          },
+          "eliteQualifyingMetrics": [
+            {
+              "name": "string", // e.g., "PQP", "LP", "EQM"
+              "valueEarned": "integer",
+              "unit": "string"
+            }
+          ],
+          "calculationNotes": ["string"] // e.g., "Includes 25% elite bonus", "Fare class K earns 50%", "Earnings based on base fare + carrier surcharges"
+        }
+      ],
+      "summaryAdvice": "string" // Optional: LLM-generated summary or context for next step
+    }
+    ```
+
+3.  **Tool: `find_award_availability_options`**
+
+    **Description:**
+    Identifies potential award travel options based on user criteria. This tool leverages the `Knowledge Base Service` for program rules, partnerships, and conceptual award charts/sweet spots. *Note: In this conceptual architecture, it does not perform live searches on airline systems but provides options based on the knowledge graph.*
+
+    **Invoked by:**
+    `LLM Orchestration Service` (when a user asks "find me award flights...").
+
+    **Interacts with (Data Source):**
+    `Knowledge Base Service (GraphRAG)`.
+
+    **Request (Conceptual JSON):**
+    ```json
+    {
+      "origin": "string", // Airport code or city
+      "destination": "string", // Airport code or city
+      "travelDates": {
+        "departureDate": "YYYY-MM-DD", // Can also support flexible date ranges
+        "returnDate": "YYYY-MM-DD" // Optional
+      },
+      "cabinClass": "string", // e.g., "Economy", "Business", "First"
+      "numberOfTravelers": "integer",
+      "userRewardsBalances": [ // From user profile or provided
+        { "programId": "string", "balance": "integer" }
+      ],
+      "preferences": {
+        "maxStops": "integer",
+        "preferredAlliances": ["string"],
+        "considerPointTransfers": "boolean"
+      }
+    }
+    ```
+
+    **Response (Conceptual JSON):**
+    ```json
+    {
+      "awardOptions": [
+        {
+          "optionId": "string",
+          "description": "string", // e.g., "Lufthansa Business Class via Frankfurt on Star Alliance"
+          "segments": [
+            { "airline": "string", "flightNumber": "string", "cabin": "string"}
+          ],
+          "estimatedCost": {
+            "amount": "integer",
+            "currencyName": "string", // e.g., "Miles", "Points"
+            "programId": "string" // Program to redeem from
+          },
+          "taxesAndFeesEstimate": {
+            "amount": "float",
+            "currency": "string" // e.g., "USD"
+          },
+          "transferPartnersPotentiallyNeeded": [ // If points transfer is an option
+            { "fromProgram": "string", "toProgram": "string", "estimatedPointsToTransfer": "integer" }
+          ],
+          "keyRulesOrBenefits": ["string"], // e.g., "Utilizes a known sweet spot for this route"
+          "confidence": "string" // e.g., "High (based on typical availability patterns)" - as it's not live
+        }
+      ],
+      "summaryAdvice": "string" // e.g., "Option 1 offers the best points value."
+    }
+    ```
+
+4.  **Tool: `extract_loyalty_info_from_document`** (Primarily used by Data Ingestion Pipeline Service)
+
+    **Description:**
+    This specialized tool is invoked by the `Data Ingestion Pipeline Service`. It takes processed textual or structured content (e.g., from HTML, Textract JSON output) from a single gathered document and uses an LLM (via Amazon Bedrock) to extract specific loyalty program information (rules, earning rates, validity dates, partner details, etc.) according to a predefined target schema.
+
+    **Invoked by:**
+    `Data Ingestion Pipeline Service` (specifically, its Glue ETL/Step Functions orchestrator).
+
+    **Interacts with (AI Service):**
+    Amazon Bedrock (LLM).
+
+    **Request (Conceptual JSON):**
+    ```json
+    {
+      "documentContent": "string", // The text/structured content to analyze
+      "documentSourceIdentifier": "string", // e.g., original URL, S3 key of the raw file
+      "extractionTargetSchema": { // Defines what information to look for
+        "type": "object",
+        "properties": {
+          "airlineName": { "type": "string" },
+          "partnerAirline": { "type": "string" },
+          "fareClassDetails": { 
+            "type": "array", 
+            "items": { 
+              "type": "object", 
+              "properties": { 
+                "classCode": {"type": "string"}, 
+                "earningRate": {"type": "string"},
+                "eliteMetricRate": {"type": "string"}
+              } 
+            }
+          },
+          "ruleEffectiveDate": { "type": "string", "format": "date" },
+          "ruleExpirationDate": { "type": "string", "format": "date" },
+          "conditionsAndNotes": { "type": "string" }
+          // ... other fields relevant to the document type
+        }
+      }
+    }
+    ```
+
+    **Response (Conceptual JSON):**
+    ```json
+    {
+      "extractedData": {
+        // JSON object conforming to the extractionTargetSchema, populated by the LLM
+        "airlineName": "Example Air",
+        "fareClassDetails": [{"classCode": "K", "earningRate": "50% of distance flown"}],
+        "ruleEffectiveDate": "2024-01-01",
+        // ...
+      },
+      "extractionConfidence": "float", // e.g., 0.85
+      "processingErrorsOrWarnings": ["string"] // Any issues encountered during extraction
+    }
+    ```
+
+*(This list can be expanded as more tools/agent functionalities are conceptualized for the system.)*
+
+---
+*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
