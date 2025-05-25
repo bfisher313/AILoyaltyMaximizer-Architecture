@@ -61,13 +61,13 @@ This diagram illustrates these primary containers, their core responsibilities, 
 **Container Descriptions:**
 
 1.  **Conversational API (Container)**
-    * **Description:** This container serves as the primary, secure entry point for all external user interactions with the AI Loyalty Maximizer Suite. It exposes a well-defined API that client applications (e.g., future web or mobile UIs, chatbots) will use to send user queries and receive responses. Its responsibilities include request validation, authentication/authorization, routing incoming requests to the `LLM Orchestration Service`, and formatting the final responses before sending them back to the client.
-    * **Key Technologies (Conceptual):** Amazon API Gateway (for defining and managing the API endpoints, handling traffic, security), AWS Lambda (for backend request/response processing and integration logic).
-    * **Primary Interactions:**
-      * Receives requests from the `Travel Enthusiast` (via their client application).
-      * Forwards processed queries/commands to the `LLM Orchestration Service`.
-      * Receives synthesized responses/actions from the `LLM Orchestration Service`.
-      * Sends formatted responses back to the `Travel Enthusiast`'s client application.
+  * **Description:** This container serves as the primary, secure entry point for all external user interactions with the AI Loyalty Maximizer Suite. It exposes a well-defined API that client applications (e.g., future web or mobile UIs, chatbots) will use to send user queries and receive responses. Its responsibilities include request validation, authentication/authorization, routing incoming requests to the `LLM Orchestration Service`, and formatting the final responses before sending them back to the client.
+  * **Key Technologies (Conceptual):** Amazon API Gateway (for defining and managing the API endpoints, handling traffic, security), AWS Lambda (for backend request/response processing and integration logic).
+  * **Primary Interactions:**
+    * Receives requests from the `Travel Enthusiast` (via their client application).
+    * Forwards processed queries/commands to the `LLM Orchestration Service`.
+    * Receives synthesized responses/actions from the `LLM Orchestration Service`.
+    * Sends formatted responses back to the `Travel Enthusiast`'s client application.
 
 2.  **LLM Orchestration Service (Container)**
   * **Description:** This container is the central intelligence and "brain" of the system, acting as the **Primary Reasoning Agent**. It receives user queries from the `Conversational API`, interprets user intent, breaks down complex requests into manageable tasks, and determines the sequence of operations or tools (MCP Tools/Specialized Agents) needed. It manages conversational state (if required for multi-turn dialogues), invokes the appropriate tools, and synthesizes their outputs into coherent, context-aware responses or actions.
