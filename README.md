@@ -33,25 +33,25 @@ The focus is on the architectural design, decision-making processes, and integra
 
 ## Key Features & Technologies Showcased
 
-* **Artificial Intelligence (AI):** Core of the solution.
-* **Large Language Models (LLMs):**
-    * Serving as the primary orchestrator for user interaction and tool invocation (e.g., leveraging models via Amazon Bedrock).
-    * Utilized for advanced information extraction from diverse, semi-structured source documents (web pages, PDFs) to populate the knowledge base.
-* **Advanced Machine Learning Capabilities (Conceptual):** Includes the architectural considerations for potential future enhancements such as **fine-tuning LLMs or training specialized models (e.g., with PyTorch, TensorFlow on Amazon SageMaker)** for optimized domain-specific tasks, information extraction, or agentic behaviors.
-* **Model Context Protocol (MCP):** Conceptual framework for LLMs to interact with specialized tools and agents.
-* **AI Agents & Agentic Architecture:** Leveraging LLMs as orchestrating agents and specialized tools/functions as worker agents, particularly in the data ingestion pipeline and for query resolution.
-* **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Utilizing graph databases (e.g., Amazon Neptune) combined with RAG techniques for accessing and reasoning over complex airline loyalty data.
-* **Intelligent Data Ingestion & ETL Pipeline:**
-    * Automated processing of manually gathered source documents (HTML, PDF, text).
-    * **Amazon S3:** Landing zone for raw and processed data.
-    * **Amazon Textract:** For OCR and table/form extraction from PDF/image documents.
-    * **AWS Glue:** For complex ETL, data transformation, and applying Python-based parsing logic (including LLM integration for extraction).
-    * **AWS Step Functions:** Orchestrating the multi-stage data ingestion and graph population pipeline.
-    * **(Potentially) Amazon Athena:** For validating intermediate extracted data.
-* **Serverless Architecture:** Prioritizing AWS Lambda, API Gateway, Step Functions, DynamoDB, and S3 for scalability and cost-effectiveness.
-* **Cloud-Native on AWS:** Deep integration with a wide array of AWS managed services.
-* **Comprehensive Architectural Design:** Including C4 modeling for software views, supplemented by enterprise architectural perspectives (Process, Physical/Deployment, Development).
-* **DevOps & Infrastructure as Code (IaC):** Considerations for CI/CD pipelines and managing infrastructure programmatically (e.g., AWS CDK/CloudFormation).
+* **Artificial Intelligence (AI):** Core of the solution, underpinning all intelligent capabilities.
+* **End-to-End AI Solution Lifecycle Consideration:** Architectural design encompasses data ingestion and processing, model utilization (LLMs), deployment on AWS, and conceptual considerations for future model training/evaluation.
+* **Large Language Models (LLMs) & Natural Language Processing (NLP):**
+  * Serving as the primary orchestrator for user interaction (NLP) and tool invocation, leveraging models via Amazon Bedrock.
+  * Utilized for advanced NLP-driven information extraction from diverse, semi-structured source documents (web pages, PDFs) to populate the knowledge base.
+* **Advanced Machine Learning Capabilities (Conceptual):** Includes architectural considerations for potential future enhancements such as fine-tuning LLMs or training specialized models (e.g., with PyTorch, TensorFlow on Amazon SageMaker) for optimized domain-specific tasks.
+* **Model Context Protocol (MCP) & Agentic Architecture:** Utilizing LLMs as orchestrating agents and specialized tools/functions as worker agents to perform specific tasks and enable complex behaviors.
+* **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Employing graph databases (e.g., Amazon Neptune) combined with RAG techniques for contextual understanding and accessing interconnected airline loyalty data.
+* **Intelligent Data Ingestion & ETL Pipeline with OCR:**
+  * Automated processing of manually gathered source documents (HTML, PDF, text).
+  * **Amazon S3:** Landing zone for raw and processed data.
+  * **Amazon Textract:** For **OCR (Optical Character Recognition)** and table/form extraction from PDF/image documents.
+  * **AWS Glue:** For **scalable** complex ETL, data transformation (with capabilities **akin to Apache Spark**), and applying Python-based parsing logic (including LLM integration for extraction).
+  * **AWS Step Functions:** Orchestrating the multi-stage data ingestion and graph population pipeline.
+  * **(Potentially) Amazon Athena:** For validating intermediate extracted data.
+* **Serverless Architecture:** Prioritizing AWS Lambda, API Gateway, Step Functions, DynamoDB, and S3 for scalability, operational efficiency, and cost-effectiveness.
+* **Cloud-Native on AWS:** Deep integration with a wide array of AWS managed services, demonstrating proficiency with a leading cloud platform.
+* **Comprehensive Architectural Design:** Focusing on creating **robust, secure**, and scalable solutions, leveraging C4 modeling for software views, supplemented by enterprise architectural perspectives (Process, Physical/Deployment, Development).
+* **DevOps & Infrastructure as Code (IaC):** Incorporating considerations for CI/CD pipelines and managing infrastructure programmatically (e.g., AWS CDK/CloudFormation), aligning with modern DevOps practices.
 
 ## Architectural Approach
 
