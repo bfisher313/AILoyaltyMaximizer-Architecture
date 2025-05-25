@@ -110,6 +110,8 @@ This diagram illustrates these primary containers, their core responsibilities, 
 
 ## 3.4. Component Diagrams (C4 Level 3) - For Critical Containers
 
+**[🚧 TODO: Future Iteration - Detailed Component Diagrams 🚧]**
+
 Component diagrams provide a more detailed view by zooming into individual containers listed in the C4 Level 2 diagram. They illustrate the key internal components, modules, or classes within a container and their interactions.
 
 Developing detailed C4 Level 3 Component diagrams for each container is an extensive task. For the initial version of this architectural document, this section outlines the intent, and specific component diagrams for critical containers (such as the `LLM Orchestration Service` and the `Data Ingestion Pipeline Service`) will be developed in future iterations.
