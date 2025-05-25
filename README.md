@@ -37,9 +37,10 @@ The focus is on the architectural design, decision-making processes, and integra
 * **Large Language Models (LLMs):**
     * Serving as the primary orchestrator for user interaction and tool invocation (e.g., leveraging models via Amazon Bedrock).
     * Utilized for advanced information extraction from diverse, semi-structured source documents (web pages, PDFs) to populate the knowledge base.
+* **Advanced Machine Learning Capabilities (Conceptual):** Includes the architectural considerations for potential future enhancements such as **fine-tuning LLMs or training specialized models (e.g., with PyTorch, TensorFlow on Amazon SageMaker)** for optimized domain-specific tasks, information extraction, or agentic behaviors.
 * **Model Context Protocol (MCP):** Conceptual framework for LLMs to interact with specialized tools and agents.
-* **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Utilizing graph databases (e.g., Amazon Neptune) combined with RAG techniques for accessing and reasoning over complex airline loyalty data.
 * **AI Agents & Agentic Architecture:** Leveraging LLMs as orchestrating agents and specialized tools/functions as worker agents, particularly in the data ingestion pipeline and for query resolution.
+* **GraphRAG (Retrieval Augmented Generation with Knowledge Graphs):** Utilizing graph databases (e.g., Amazon Neptune) combined with RAG techniques for accessing and reasoning over complex airline loyalty data.
 * **Intelligent Data Ingestion & ETL Pipeline:**
     * Automated processing of manually gathered source documents (HTML, PDF, text).
     * **Amazon S3:** Landing zone for raw and processed data.
