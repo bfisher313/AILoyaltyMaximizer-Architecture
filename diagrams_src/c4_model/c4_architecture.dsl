@@ -41,13 +41,30 @@ workspace "AI Loyalty Maximizer Suite Architecture" "A model of the AI Loyalty M
     views {
         # System Context Diagram
         systemContext alms "SystemContext" "The System Context diagram for the AI Loyalty Maximizer Suite." {
-            include *
+            include alms
+            include userTE
+            include userDC
+            include extRawData
+            include extNotificationDelivery
+            // No need to include containers here for L1
             autolayout lr
         }
 
         # Container Diagram for AI Loyalty Maximizer Suite
         container alms "Containers" "The Container diagram for the AI Loyalty Maximizer Suite." {
-            include *
+            # Include specific people and external systems interacting with containers
+            include userTE
+            include userDC
+            include extRawData
+            include extNotificationDelivery
+
+            # Then include all containers within the 'alms' software system
+            include convAPI
+            include llmOrchestrator
+            include userProfileSvc
+            include knowledgeBaseSvc
+            include dataIngestionSvc
+            include notificationSvc
             autolayout tb
         }
 

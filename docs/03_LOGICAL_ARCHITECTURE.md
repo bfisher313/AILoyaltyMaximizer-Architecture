@@ -57,7 +57,6 @@ This diagram illustrates these primary containers, their core responsibilities, 
 **Diagram:**
 
 ![Container Diagram - C4 Level 2 for AI Loyalty Maximizer Suite](../diagrams_output/c4_model_renders/structurizr-Containers.png)
-* **Link to Diagram File (Optional, if you also want a text link):** [`c4_level2_container.png`](../diagrams_output/c4_model_renders/c4_level2_container.png)
 
 **Container Descriptions:**
 
