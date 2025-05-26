@@ -110,7 +110,7 @@ This diagram illustrates these primary containers, their core responsibilities, 
 
 ## 3.4. Component Diagrams (C4 Level 3) - For Critical Containers
 
-**[🚧 TODO: Future Iteration - Detailed Component Diagrams 🚧]**
+**[🚧 TODO: Future Iteration - Detailed Component Diagrams. See Github Issue #1, #2, and #3  🚧]**
 
 Component diagrams provide a more detailed view by zooming into individual containers listed in the C4 Level 2 diagram. They illustrate the key internal components, modules, or classes within a container and their interactions.
 

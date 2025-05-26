@@ -22,6 +22,8 @@ All data transmitted between system components, between users and the system, an
 
 Before diving into specific database schemas, it's useful to define the core conceptual entities that the AI Loyalty Maximizer Suite deals with. These entities and their relationships form the basis of our knowledge graph and other data stores.
 
+**[🚧 TODO: Create Conceptual Data Model (ERD-like). See GitHub Issue #4 🚧]**
+
 * **User:** Represents an end-user of the application.
     * *Attributes (examples):* UserID, Preferences (home airport, preferred airlines/alliances), Stored Loyalty Program Memberships.
 * **Loyalty Program:** A specific frequent flyer or loyalty program offered by an airline or alliance.
@@ -59,6 +61,8 @@ The heart of the AI Loyalty Maximizer Suite's intelligence lies in its knowledge
 ### 4.3.2. Conceptual Graph Schema (Nodes & Edges)
 
 The Amazon Neptune graph database will store entities and their relationships as nodes and edges, respectively. Below is a conceptual schema outlining key node labels, their representative properties, and key edge labels with their significance. This schema will be refined and expanded as the system evolves.
+
+**[🚧 TODO: Insert Graph Schema Diagram (Neptune) here. See GitHub Issue #5 🚧]**
 
 **Key Node Labels & Representative Properties:**
 
@@ -216,6 +220,9 @@ The pipeline is orchestrated using AWS Step Functions and involves several key s
 
 **High-Level Flow:**
 The pipeline is triggered when a `Data Curator` uploads new source material (e.g., HTML files of airline partner pages, PDFs of earning charts, text snippets of rules) to a designated Amazon S3 bucket. From there, a series of automated steps are initiated to process the content:
+
+**[🚧 TODO: Insert Data Ingestion Pipeline Flow Diagram here. See GitHub Issue #6 🚧]**
+
 1.  **Initial Processing & Dispatch:** Basic validation and routing based on file type. PDF/image content is sent for OCR and structure extraction.
 2.  **Core Information Extraction:** LLMs are used to understand the content and extract key entities, relationships, and attributes (like earning rates, conditions, effective/expiration dates) based on predefined schemas or targeted prompts.
 3.  **Transformation:** The extracted information is transformed into a structured format suitable for the graph model (nodes and edges).
