@@ -179,13 +179,13 @@ Below are conceptual definitions for some of the key MCP tools:
 2.  **Tool: `calculate_flight_earnings`**
 
     **Description:**
-    Calculates the potential redeemable rewards currency (miles/points) and elite-qualifying metrics for a specific flight itinerary across one or more target loyalty programs.
+    Calculates the potential redeemable rewards currency (miles/points) and elite-qualifying metrics for a specific flight itinerary across one or more target loyalty programs. **The tool derives flight distances using geographic coordinates of origin and destination airports stored in the Knowledge Base Service.**
 
     **Invoked by:**
     `LLM Orchestration Service` (when a user asks "how much will I earn for this flight?").
 
     **Interacts with (Data Source):**
-    `Knowledge Base Service (GraphRAG)` (to retrieve earning rules, fare class multipliers, partner agreements).
+    `Knowledge Base Service (GraphRAG)` (to retrieve earning rules, fare class multipliers, partner agreements, **and airport coordinates**).
 
     **Request (Conceptual JSON):**
     ```json
@@ -196,17 +196,17 @@ Below are conceptual definitions for some of the key MCP tools:
             "marketingCarrier": "string", // e.g., "UA"
             "operatingCarrier": "string", // e.g., "LH"
             "flightNumber": "string",
-            "originAirport": "string", // e.g., "JFK"
-            "destinationAirport": "string", // e.g., "FRA"
-            "fareClass": "string", // e.g., "K"
-            "distanceMiles": "integer"
+            "originAirport": "string", // e.g., "JFK" - Used to fetch coordinates
+            "destinationAirport": "string", // e.g., "FRA" - Used to fetch coordinates
+            "fareClass": "string" // e.g., "K"
+            // "distanceMiles": "integer" <-- This field is REMOVED; system calculates it
           }
         ],
         "ticketPrice": { // Optional, for revenue-based programs or where spend is a factor
           "baseFare": "float",
-          "carrierImposedSurcharges": "float", // YQ/YR fees that often count towards earnings
-          "taxesAndAirportFees": "float",    // Government/airport taxes & fees that usually don't
-          "totalFare": "float", // The grand total paid by the customer
+          "carrierImposedSurcharges": "float",
+          "taxesAndAirportFees": "float",
+          "totalFare": "float",
           "currency": "string" // e.g., "USD"
         }
       },
@@ -227,6 +227,7 @@ Below are conceptual definitions for some of the key MCP tools:
         {
           "programId": "string",
           "programName": "string",
+          "calculatedDistanceMiles": "integer", // Optional: Include calculated distance for transparency
           "redeemableCurrency": {
             "amountEarned": "integer",
             "type": "string" // e.g., "Miles", "Points"
@@ -238,7 +239,7 @@ Below are conceptual definitions for some of the key MCP tools:
               "unit": "string"
             }
           ],
-          "calculationNotes": ["string"] // e.g., "Includes 25% elite bonus", "Fare class K earns 50%", "Earnings based on base fare + carrier surcharges"
+          "calculationNotes": ["string"] // e.g., "Includes 25% elite bonus", "Fare class K earns 50% of calculated distance", "Earnings based on base fare + carrier surcharges"
         }
       ],
       "summaryAdvice": "string" // Optional: LLM-generated summary or context for next step
@@ -363,8 +364,6 @@ Below are conceptual definitions for some of the key MCP tools:
       "processingErrorsOrWarnings": ["string"] // Any issues encountered during extraction
     }
     ```
-
-*(This list can be expanded as more tools/agent functionalities are conceptualized for the system.)*
 
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
