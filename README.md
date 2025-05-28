@@ -55,7 +55,9 @@ The focus is on the architectural design, decision-making processes, and integra
 
 ## Architectural Approach
 
-The architecture detailed herein utilizes the **C4 model** (Context, Containers, Components) for its clarity in depicting software structure. This is augmented by broader **enterprise architectural views**—including Process, Physical (Deployment), and Development perspectives—to provide a holistic understanding suitable for complex, scalable systems. A key aspect of the design is the **AI-driven, automated pipeline for ingesting and transforming varied source data** into a structured knowledge graph, minimizing manual data entry and enhancing adaptability.
+The architecture detailed herein utilizes the **C4 model** ... (as previously written) ... A key aspect of the design is the **AI-driven, automated pipeline for ingesting and transforming varied source data** into a structured knowledge graph, minimizing manual data entry and enhancing adaptability.
+
+**Platform Focus:** This reference architecture is detailed using Amazon Web Services (AWS) to provide concrete examples of managed service integration and cloud-native design. However, the core architectural patterns, logical components, and data flow principles are designed to be adaptable and could be implemented with equivalent services on other major cloud platforms such as Microsoft Azure or Google Cloud Platform (GCP).
 
 ---
 

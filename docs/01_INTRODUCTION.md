@@ -36,7 +36,7 @@ The AI Loyalty Maximizer Suite is primarily designed for:
 This architectural documentation focuses on the **design and conceptualization** of the AI Loyalty Maximizer Suite. The scope includes:
 
 * **System Architecture:** Defining the overall structure, components, modules, interfaces, and data for the system.
-* **Technology Stack:** Primarily focusing on solutions leveraging Amazon Web Services (AWS), including AI/ML services (Amazon Bedrock, Amazon Textract), data services (Amazon Neptune, Amazon DynamoDB, Amazon S3, AWS Glue, Amazon Athena), integration services (API Gateway, Step Functions), and compute services (AWS Lambda).
+* **Technology Stack:** Primarily focusing on solutions leveraging Amazon Web Services (AWS) for concrete service examples. The architectural principles and patterns, however, are intended to be transferable to other major cloud platforms (e.g., Microsoft Azure, Google Cloud Platform) using their respective equivalent services.
 * **Core Functionality:**
     * Conversational AI interface for user queries.
     * Logic for award travel optimization.
