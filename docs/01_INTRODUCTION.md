@@ -56,7 +56,8 @@ This architectural documentation focuses on the **design and conceptualization**
 * **Legal/Compliance Deep Dive for Specific Regions:** While general security and data protection are addressed, a detailed analysis of all specific regional data privacy laws (e.g., GDPR in full detail) is not included.
 
 ---
-*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
+*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../README.md) of this repository.*
 
 ---
-**Next:** [1. Introduction](./01_INTRODUCTION.md)
+**Previous:** [Architecture Overview & Document Guide](./00_ARCHITECTURE_OVERVIEW.md)
+**Next:** [2. Business Context & Driving Requirements](./02_BUSINESS_CONTEXT_AND_REQUIREMENTS.md)
