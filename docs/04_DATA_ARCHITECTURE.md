@@ -567,4 +567,8 @@ A robust data ingestion pipeline requires comprehensive monitoring to track its 
 By implementing comprehensive monitoring and robust error handling, the Automated Knowledge Base Ingestion Pipeline aims to be a reliable and observable system, minimizing data loss and providing insights into its operational health.
 
 ---
-*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) (if you are not already there) or the main [README.md](../README.md) of this repository.*
+*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../README.md) of this repository.*
+
+---
+**Previous:** [3. Logical Architecture (Software View)](./03_LOGICAL_ARCHITECTURE.md)
+**Next:** [5.0. Introduction to Comprehensive Architectural Views](./05_COMPREHENSIVE_ARCHITECTURAL_VIEWS/05_00_INTRODUCTION_TO_VIEWS.md)

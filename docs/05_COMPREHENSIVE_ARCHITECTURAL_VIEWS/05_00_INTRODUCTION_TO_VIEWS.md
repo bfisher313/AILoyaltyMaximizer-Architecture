@@ -15,6 +15,11 @@ The following views will be detailed:
 
 By examining the AI Loyalty Maximizer Suite through these different lenses, we can ensure that all critical aspects of its architecture are considered, from high-level functionality and data management to runtime behavior and physical deployment. This multi-view approach supports clearer communication with diverse stakeholders and leads to a more robust and well-understood system design.
 
----
+...
 
-*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) (if you are not already there) or the main [README.md](../README.md) of this repository.*
+---
+*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../README.md) of this repository.*
+
+---
+**Previous:** [4. Data Architecture](../04_DATA_ARCHITECTURE.md)
+**Next:** [5.1. Process View (Runtime Behavior & Concurrency)](./05_01_PROCESS_VIEW.md)

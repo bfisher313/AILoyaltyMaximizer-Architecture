@@ -366,4 +366,8 @@ Below are conceptual definitions for some of the key MCP tools:
     ```
 
 ---
-*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
+*This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../README.md) of this repository.*
+
+---
+**Previous:** [1. Introduction](./01_INTRODUCTION.md)
+**Next:** [3. Logical Architecture (Software View)](./03_LOGICAL_ARCHITECTURE.md)
