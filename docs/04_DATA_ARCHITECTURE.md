@@ -109,8 +109,8 @@ The Amazon Neptune graph database will store entities and their relationships as
     * `eliteMetricFormula` (String, Optional): Formula or value for calculating the elite metric.
     * `additionalEliteMetrics` (List of Objects, Optional): For programs with multiple EQMs (e.g., `[{name: "EQS", value: "1"}]`).
     * `conditions` (String/Text): Specific conditions or restrictions for this rule (e.g., "Ticketed by X", "Flown by Y", "Only for flights within Z region").
-    * `effectiveDate` (Date, ISO 8601 String): Date when the rule becomes effective.
-    * `expirationDate` (Date, ISO 8601 String, Optional): Date when the rule expires.
+    * `effectiveDate` (Date, ISO 8601 String): Date when the rule version becomes effective.
+    * `expirationDate` (Date, ISO 8601 String, Optional): Date when the rule versio expires or is superseded.
     * `sourceDocumentId` (String, Foreign Key to WebSourceDocument): Reference to the source of this rule.
 
 * **`WebSourceDocument`** (Represents the origin of the ingested information)
@@ -473,10 +473,12 @@ Once the extracted information has been processed and (optionally) validated, th
 * **Input:** Reads the validated JSON files from the designated S3 location (e.g., `s3://loyalty-rules-llm-extracted-facts/` or a "validated-facts" S3 prefix).
 * **Process (within the Glue ETL Python Shell/Spark script):**
     * **Schema Mapping:** The script iterates through the JSON records and maps the extracted fields to the conceptual graph schema defined in Section 4.3.2 (nodes and edges).
-    * **Node Creation Logic:**
-        * Identifies unique entities (e.g., Airlines, Loyalty Programs, Airports, Earning Rules, Web Source Documents) from the JSON data.
-        * Assigns unique IDs (`~id` property for Neptune) to each node. For entities that might be mentioned multiple times across different source documents (like an airline or an airport), the script needs a strategy for de-duplication and using consistent IDs (e.g., using IATA codes for airports/airlines as part of their node ID, or maintaining a lookup mechanism).
-        * Constructs rows for node CSV files, including all defined properties (`~label` for the node type, and other custom properties like `name`, `iataCode`, `effectiveDate`, etc.).
+  * **Node Creation Logic:**
+      * **Entity Identification:** The script first identifies unique conceptual entities (e.g., Airlines, Loyalty Programs, Airports, Earning Rules, Web Source Documents) from the processed JSON data.
+      * **Deterministic ID Assignment:** To ensure idempotency (preventing duplicates upon reprocessing unchanged data) and allow for updates, unique and **deterministic `~id` properties** are assigned for Neptune.
+          * For relatively static entities like `Airline` or `Airport`, standardized codes (e.g., IATA/ICAO codes like `airline_UA`, `airport_JFK`) serve as their primary `~id`.
+          * For more dynamic or complex entities like an `EarningRule`, the `~id` is typically a composite value or a hash derived from its core defining attributes (e.g., crediting program ID, operating carrier, fare class, and importantly, the `effectiveDate` to differentiate versions). This ensures that the same rule version always maps to the same node ID.
+      * **Property Construction:** The script then constructs rows for the node CSV files. Each row includes the `~id`, the `~label` (node type, e.g., `Airline`, `EarningRule`), and all other relevant properties extracted and mapped for that entity (e.g., `name`, `iataCode`, `redeemableMilesFormula`, `effectiveDate`, `expirationDate`), ensuring data types are correctly formatted for Neptune.
     * **Edge Creation Logic:**
         * Identifies relationships between the nodes based on the extracted data (e.g., an `EarningRule` `APPLIES_TO_FARE_CLASS_ON_AIRLINE` an `Airline` and `FareClass`; an `EarningRule` `CREDITS_TO_PROGRAM` a `LoyaltyProgram`; an `Airline` `PARTNERS_WITH` another `Airline`).
         * Constructs rows for edge CSV files, including unique edge IDs (`~id`), the source node ID (`~from`), the target node ID (`~to`), and the edge label (`~label`), along with any properties of the edge.

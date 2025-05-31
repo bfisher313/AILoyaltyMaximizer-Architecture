@@ -135,6 +135,77 @@ This scenario describes the process flow when a `Travel Enthusiast` queries the 
 
 This scenario now accurately reflects the system's capability to provide strategic guidance based on its knowledge graph, acknowledging the limitations around live dynamic award pricing by focusing on empowering the user with information to conduct their own targeted searches.
 
+### 5.1.2.3. Scenario: Automated Knowledge Base Ingestion Pipeline Flow
+
+This scenario describes the backend process flow when a `Data Curator` submits a new source document (e.g., an HTML page, PDF, or text file containing loyalty program information) to be processed and ingested into the system's knowledge graph.
+
+**Trigger:** The `Data Curator` uploads a file to the designated "Raw Source Data Bucket" on Amazon S3 (e.g., `s3://loyalty-rules-raw-pages/`).
+
+**[🚧 TODO: Insert Process Flow/Activity Diagram for 'Automated Knowledge Base Ingestion Pipeline' here. See GitHub Issue #9 🚧]**
+
+**Sequence of Interactions & Data Flows:**
+
+1.  **S3 Object Creation & Pipeline Initiation:**
+    * An `s3:ObjectCreated:*` event in the "Raw Source Data Bucket" triggers an initial AWS Lambda function (e.g., `PipelineTriggerLambda`).
+    * This Lambda function performs basic validation (e.g., checks if the file type is expected) and gathers essential metadata (S3 bucket name, object key).
+    * It then initiates an execution of the main AWS Step Functions state machine designed for this pipeline, passing the S3 object metadata as input.
+    * **Data Flow:** S3 object metadata to Step Functions.
+
+2.  **Step 1: Initial Processing & Dispatch (Orchestrated by Step Functions, executed by Lambda):**
+    * The Step Functions state machine invokes an AWS Lambda function (`InitialDispatchLambda` - corresponding to stage 4.6.4).
+    * This Lambda:
+        * Determines the file type (HTML, PDF, TXT).
+        * **If PDF/Image:** Initiates an asynchronous Amazon Textract job (`StartDocumentAnalysis`). The Textract job is configured to send its completion notification (success/failure) to an SNS topic. The Step Functions workflow pauses at this state using the `.waitForTaskToken` integration pattern. A separate "TextractCallbackLambda" (subscribed to the SNS topic) will later send a success/failure signal with the Textract output S3 location back to Step Functions to resume the workflow.
+        * **If HTML/TXT:** Performs initial text cleaning (e.g., stripping HTML tags to get raw text) and stages the cleaned text in a designated S3 prefix (e.g., `s3://loyalty-rules-processed-text/`).
+    * **Data Flow:** Original S3 object -> `InitialDispatchLambda` -> (if PDF) Textract -> (eventually) Textract JSON output to a new S3 location OR (if HTML/TXT) cleaned text to a new S3 location. The S3 path to this processed content is passed to the next state.
+
+3.  **Step 2: Core Information Extraction (Orchestrated by Step Functions, executed by AWS Glue ETL with LLM):**
+    * Step Functions invokes an AWS Glue ETL job (`LoyaltyDataExtractionGlueJob` - corresponding to stage 4.6.5).
+    * This Glue job (Python Shell or Spark):
+        * Reads the processed content (cleaned text or Textract JSON) from S3.
+        * Chunks the content if necessary.
+        * Constructs appropriate prompts and invokes an LLM via Amazon Bedrock (conceptually, the `extract_loyalty_info_from_document` MCP tool logic) to extract structured information (entities, rules, dates, conditions) based on predefined target schemas.
+        * Parses and validates the LLM's JSON response.
+        * Aggregates results if chunking was used.
+    * **Data Flow:** Processed text/Textract JSON from S3 -> Glue ETL job -> Prompts/content to Amazon Bedrock -> Structured JSON "facts" from Bedrock -> Glue ETL job.
+    * The Glue job writes these extracted structured JSON "facts" to a designated S3 prefix (e.g., `s3://loyalty-rules-llm-extracted-facts/`). This output is passed to the next state.
+
+4.  **Step 3 (Optional): Intermediate Validation (Orchestrated by Step Functions, potentially involving Athena/Lambda):**
+    * If this stage (corresponding to 4.6.6) is enabled in the Step Functions workflow:
+        * A Lambda function could be invoked to execute predefined Amazon Athena queries against the extracted JSON facts (assuming a Glue Data Catalog table is defined over that S3 location).
+        * Based on query results, if validation issues are found, the workflow might:
+            * Route to a manual review/correction state (e.g., by sending a notification and waiting for a task token).
+            * Flag the data but allow processing to continue with warnings.
+            * Route to an error state if critical issues are found.
+    * **Data Flow:** Extracted JSON facts from S3 -> (queried by) Athena/Lambda -> Validation results. Validated/flagged JSON facts S3 path passed to the next state.
+
+5.  **Step 4: Graph Transformation (Orchestrated by Step Functions, executed by AWS Glue ETL):**
+    * Step Functions invokes another AWS Glue ETL job (`GraphTransformationGlueJob` - corresponding to the transformation part of stage 4.6.7).
+    * This Glue job:
+        * Reads the (validated) structured JSON facts from S3.
+        * Maps these facts to the Amazon Neptune graph schema (nodes and edges).
+        * Generates CSV files formatted for Neptune's bulk loader (one set for nodes, one for edges).
+    * **Data Flow:** Structured JSON facts from S3 -> Glue ETL job -> Neptune-formatted CSV files.
+    * The Glue job writes these CSV files to a designated S3 prefix (e.g., `s3://loyalty-rules-neptune-load-files/`). The S3 path to these load files is passed to the next state.
+
+6.  **Step 5: Neptune Bulk Load Initiation & Monitoring (Orchestrated by Step Functions, executed by Lambda):**
+    * Step Functions invokes an AWS Lambda function (`NeptuneLoadInitiatorLambda` - corresponding to the loading part of stage 4.6.7).
+    * This Lambda:
+        * Initiates an Amazon Neptune bulk load command, pointing to the S3 location of the CSV files.
+        * Receives a `loadId` from Neptune.
+    * Step Functions then enters a polling loop (or uses a callback pattern if Neptune load can provide one, though polling is common):
+        * Periodically invokes another Lambda function (`NeptuneLoadMonitorLambda`) with the `loadId` to check the status of the bulk load job.
+        * Continues polling until the load job completes (succeeds or fails).
+    * **Data Flow:** S3 path to CSVs -> `NeptuneLoadInitiatorLambda` -> Load command to Neptune. `loadId` -> `NeptuneLoadMonitorLambda` -> Status query to Neptune -> Load status.
+
+7.  **Step 6: Finalization & Logging (Orchestrated by Step Functions):**
+    * Based on the Neptune bulk load status:
+        * **If successful:** Logs completion, potentially moves the original source file in the raw S3 bucket to an "archive" or "processed" prefix. Sends a success notification (e.g., via SNS).
+        * **If failed:** Logs detailed errors (Neptune often provides error logs in S3 for failed bulk loads), moves the original source file to an "error" prefix, and sends a failure notification for investigation.
+    * The Step Functions execution completes.
+
+This pipeline demonstrates an automated, resilient, and observable process for transforming diverse source data into a structured knowledge graph, leveraging multiple AWS services in a coordinated manner.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
