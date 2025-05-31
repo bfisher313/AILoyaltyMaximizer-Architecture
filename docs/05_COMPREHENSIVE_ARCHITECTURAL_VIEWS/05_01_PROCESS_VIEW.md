@@ -317,4 +317,5 @@ By considering these aspects in the architecture, the AI Loyalty Maximizer Suite
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
 ---
-**Previous:** [5.1.4. Asynchronous Processing](./05_01_PROCESS_VIEW.md) **Next:** [5.2. Development View (System Organization & Realization)](./05_02_DEVELOPMENT_VIEW.md)
+**Previous:** [5.0. Introduction to Comprehensive Architectural Views](./05_00_INTRODUCTION_TO_VIEWS.md)
+**Next:** [5.2. Development View (System Organization & Realization)](./05_02_DEVELOPMENT_VIEW.md)
