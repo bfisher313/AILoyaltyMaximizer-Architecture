@@ -6,11 +6,11 @@ Understanding the business context and the specific requirements that drive the 
 
 These user stories represent the key functionalities and value propositions of the AI Loyalty Maximizer Suite from the perspective of its target audience. They also serve as the "+1 View" (Scenarios) to validate the architecture against practical use cases.
 
-* **US-001: Award Travel Optimization**
-    * **As a** frequent flyer with miles/points across multiple loyalty programs,
-    * **I want to** input my desired travel (origin, destination, approximate dates, preferred cabin class, and number of travelers),
-    * **So that** the system can intelligently search for award availability, suggest optimal redemption options (including potential point transfers between programs), and highlight the best value based on my available rewards currency.
-    * **Scenario Example:** Sarah has 100k Amex MR points, 50k United Miles, and 30k Delta SkyMiles. She wants to fly business class from New York (NYC) to London (LON) for two people next September. The system should analyze transfer options (e.g., Amex to Aeroplan or Flying Blue), check award availability on relevant airlines/alliances, and present her with options ranked by total points cost, fees, and overall value.
+* **US-001: Strategic Award Pathway Analysis**
+  * **As a** frequent flyer with rewards currency across multiple programs (e.g., bank points, airline miles),
+  * **I want to** input my desired travel (origin, destination, approximate dates, preferred cabin class),
+  * **So that** the system can analyze potential airline programs, identify optimal transfer partner opportunities, highlight programs known for fixed-value redemptions or "sweet spots" relevant to my route, and provide guidance on programs to investigate further for my trip, along with caveats for dynamically priced awards.
+  * **Scenario Example:** Sarah has 100k Amex MR points, 50k United Miles, and 30k Delta SkyMiles. She wants to fly business class from New York (NYC) to London (LON) for two people next September. The system should identify which of her rewards currencies can be transferred to airline programs serving this route (e.g., Amex to Aeroplan or Flying Blue), explain the transfer ratios, indicate which of those programs historically offer good value or have fixed partner charts for this route, and advise her to check specific airline websites for current dynamic pricing and availability, armed with this strategic information.
 
 * **US-002: Revenue Flight Earnings Calculation**
     * **As a** traveler planning to book a paid flight,

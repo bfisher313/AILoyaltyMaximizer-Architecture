@@ -11,9 +11,9 @@ To empower airline travel enthusiasts with an intelligent, intuitive, and compre
 
 * **Design an AI-First Solution:** Architect a system where artificial intelligence, particularly Large Language Models (LLMs) and agentic behaviors, is central to the user experience and core functionality.
 * **Provide Comprehensive Loyalty Management Tools:** Conceptualize a suite that addresses key aspects of loyalty program engagement, including:
-    * Optimizing the redemption of existing miles/points for award travel.
-    * Calculating potential earnings (both redeemable rewards currency and elite-qualifying metrics) for revenue flights.
-    * Advising on the best programs for crediting flights based on user goals and program benefits.
+  * **Analyzing strategic award redemption pathways:** Identifying optimal airline loyalty programs, transfer partner opportunities, and known fixed-value or "sweet spot" redemptions based on user goals and available rewards currency, while providing guidance on navigating programs with dynamic award pricing.
+  * Calculating potential earnings (both redeemable rewards currency and elite-qualifying metrics) for revenue flights.
+  * Advising on the best programs for crediting flights based on user goals and program benefits.
 * **Leverage a Knowledge Graph (GraphRAG):** Design a system that utilizes a knowledge graph, augmented by Retrieval Augmented Generation (RAG), to represent and reason over the intricate rules, partnerships, and earning/redemption structures of various airline loyalty programs.
 * **Automate Knowledge Base Creation:** Conceptualize an intelligent data ingestion pipeline to process and transform information from diverse, semi-structured sources (manually gathered web pages, PDFs) into the structured knowledge graph, minimizing manual data entry.
 * **Showcase Cloud-Native Architecture on AWS:** Detail a robust, scalable, secure, and cost-effective deployment architecture using Amazon Web Services (AWS) managed services.
