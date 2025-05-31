@@ -77,6 +77,64 @@ This scenario describes the process flow when a `Travel Enthusiast` queries the 
 
 This detailed flow illustrates how multiple containers collaborate, leveraging the knowledge graph and AI, to fulfill a common user request.
 
+### 5.1.2.2. Scenario: Processing a "Strategic Award Pathway Analysis" User Query
+
+This scenario describes the process flow when a `Travel Enthusiast` queries the system to understand strategic options for using their existing rewards currency (miles/points) for a specific travel goal, focusing on identifying potential programs, transfer opportunities, and conceptual redemption values.
+
+**Trigger:** The `Travel Enthusiast`, via a client application, submits a query like "What are my best options to use 150,000 Amex points and 80,000 United miles for a business class trip from New York to Paris for two people next May?"
+
+**[🚧 TODO: Insert Sequence Diagram for 'Strategic Award Pathway Analysis Query' here. See GitHub Issue #8 🚧]**
+
+**Sequence of Interactions & Data Flows:**
+
+1.  **User Input to Conversational API:**
+    * The client application sends the user's natural language query or structured input to the `Conversational API` container. This input includes travel parameters (origin, destination, dates, cabin class, travelers) and details of their available rewards currency.
+
+2.  **Request Forwarding & Initial Processing:**
+    * The `Conversational API` receives the request, performs basic validation, and potentially authenticates the user.
+    * It then forwards the processed query data to the `LLM Orchestration Service`.
+
+3.  **Intent Recognition & Parameter Extraction (LLM Orchestration Service):**
+    * The `LLM Orchestration Service` (Primary Reasoning Agent, using Amazon Bedrock) receives the query.
+    * It uses an LLM to:
+        * Recognize the user's intent (e.g., "analyze_award_redemption_strategies" or "find_award_pathways").
+        * Extract key parameters: origin, destination, travel preferences, and specified rewards balances.
+        * If necessary, formulate clarifying questions for the user.
+    * **Data Flow:** Query parameters, user ID.
+
+4.  **User Profile Retrieval (Complementary Rewards Data):**
+    * The `LLM Orchestration Service` may invoke the `get_user_profile` MCP Tool to fetch any additional stored rewards balances or travel preferences from the `User Profile Service` that could be relevant to the analysis.
+    * **Data Flow:** User ID to `User Profile Service`; user rewards/preferences from `User Profile Service` to `LLM Orchestration Service`.
+
+5.  **Strategic Pathway Analysis (MCP Tool Invocation - e.g., `analyze_award_redemption_strategies`):**
+    * The `LLM Orchestration Service` determines the need for the `analyze_award_redemption_strategies` MCP Tool.
+    * It prepares the request payload, including all travel parameters and consolidated user rewards information.
+    * The `analyze_award_redemption_strategies` tool (an AWS Lambda function, potentially orchestrated by Step Functions for complex internal logic) is executed. This tool performs the core analysis:
+        * **a. Identify Relevant Airline Programs:** Queries the `Knowledge Base Service (GraphRAG)` (Amazon Neptune) to find airline loyalty programs that serve the route or have strong partner networks for the route.
+        * **b. Analyze Transfer Partnerships:** For each of the user's rewards currencies (e.g., Amex MR, Chase UR, specific airline miles), it queries the `Knowledge Base Service (GraphRAG)` to find direct and indirect transfer partners relevant to the identified airline programs, including transfer ratios and any known conditions or minimums.
+        * **c. Retrieve Conceptual Award Costs & Rules:** For promising airline programs (accessible directly or via transfer), it queries the `Knowledge Base Service (GraphRAG)` for:
+            * Information from fixed award charts (if applicable to the program/route/partner).
+            * Known "sweet spot" redemptions or typical point ranges for the specified route and cabin class (based on curated data in the graph).
+            * Key redemption rules, typical taxes/fees patterns, and notes on programs known for dynamic pricing (flagging them for the user to check live).
+        * **d. Pathway Generation:** The tool synthesizes this information to generate potential strategic pathways, e.g., "Transfer X Amex points to Airline Program Y to target an award on Partner Airline Z, which typically costs around P points for this route."
+    * **Data Flow:** Travel parameters, user rewards data to the tool; queries to `Knowledge Base Service`; program details, transfer rules, fixed/conceptual award costs, sweet spot info from `Knowledge Base Service` to the tool.
+
+6.  **Option Collation & Prioritization (Internal to MCP Tool or LLM Orchestrator):**
+    * The `analyze_award_redemption_strategies` tool collates the identified pathways and strategies.
+    * It might apply some initial filtering or prioritization based on factors like the total conceptual points cost, number of transfers, or known program value.
+    * **Data Flow:** Internal processing of generated strategies.
+
+7.  **Response Aggregation & Synthesis (LLM Orchestration Service):**
+    * The `analyze_award_redemption_strategies` tool returns a structured response to the `LLM Orchestration Service`. This response details the identified programs, transfer options, conceptual costs, and any important caveats (e.g., "Program X uses dynamic pricing; check live rates").
+    * The `LLM Orchestration Service` (using Amazon Bedrock) takes this structured information and synthesizes a user-friendly natural language explanation. The response will focus on empowering the user with strategic options to investigate further, rather than guaranteeing availability at a specific price.
+    * **Data Flow:** Structured strategic options and caveats to `LLM Orchestration Service`; natural language advice generated.
+
+8.  **Response Delivery to User:**
+    * The `LLM Orchestration Service` sends the final natural language advice (and potentially structured data outlining the strategies) back to the `Conversational API`.
+    * The `Conversational API` forwards this to the user's client application.
+
+This scenario now accurately reflects the system's capability to provide strategic guidance based on its knowledge graph, acknowledging the limitations around live dynamic award pricing by focusing on empowering the user with information to conduct their own targeted searches.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
