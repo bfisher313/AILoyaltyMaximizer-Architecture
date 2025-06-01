@@ -135,6 +135,58 @@ To enhance security and reduce data transfer costs by keeping traffic within the
 
 This network design aims to create a secure, segmented, and highly available foundation for the AI Loyalty Maximizer Suite, utilizing best practices for AWS networking.
 
+## 5.3.4. High Availability (HA) & Disaster Recovery (DR) Strategy (Conceptual)
+
+Ensuring the AI Loyalty Maximizer Suite remains available to users and resilient to failures is a key architectural consideration. This section outlines the conceptual strategies for High Availability (HA) within a single AWS Region and Disaster Recovery (DR) across regions.
+
+### 5.3.4.1. High Availability (HA) Strategy
+
+The HA strategy focuses on preventing single points of failure and ensuring the system can withstand the failure of individual components or an entire Availability Zone (AZ) within the primary AWS Region.
+
+* **Leveraging Multiple Availability Zones (AZs):**
+    * The core principle for HA is the distribution of resources across at least two, preferably three, AZs within the selected AWS Region.
+    * **VPC Subnets:** As detailed in the Network Design (Section 5.3.3), public and private subnets are provisioned across multiple AZs.
+    * **Amazon Neptune:** The Neptune database cluster will be configured as a Multi-AZ cluster. This involves a primary instance in one AZ and a standby replica in a different AZ, with synchronous data replication. In the event of a primary instance failure or an AZ outage, Neptune automatically fails over to the standby replica. Read replicas can also be placed in different AZs to distribute read load and improve availability.
+    * **Amazon DynamoDB:** DynamoDB inherently provides high availability by synchronously replicating data across multiple AZs within a region, ensuring data durability and availability even if one AZ fails.
+    * **Amazon S3:** Standard S3 storage classes (e.g., S3 Standard, S3 Intelligent-Tiering) automatically store data redundantly across a minimum of three AZs within a region, providing high durability and availability.
+    * **AWS Lambda & Amazon API Gateway:** These services are inherently highly available and fault-tolerant, operating across multiple AZs within an AWS Region by default. API Gateway can route traffic to Lambda functions running in any available AZ.
+    * **AWS Step Functions, AWS Glue, Amazon Bedrock, Amazon Textract, Amazon SNS:** These are regional AWS managed services designed for high availability, with their underlying infrastructure distributed across multiple AZs.
+    * **NAT Gateways:** Deployed in multiple AZs (one per public subnet associated with an AZ) to ensure outbound internet connectivity for resources in private subnets remains available if one NAT Gateway or AZ fails.
+
+* **Stateless Application Components:**
+    * AWS Lambda functions, which form the core of many services (Conversational API, LLM Orchestration, MCP Tools, Data Ingestion steps, Notification Service), are designed to be stateless. This allows requests to be handled by any available function instance in any AZ, facilitating load balancing and failover.
+
+* **Elasticity and Auto-Scaling:**
+    * Services like AWS Lambda, API Gateway, DynamoDB (with on-demand capacity), S3, and Step Functions automatically scale to handle varying loads, contributing to overall availability by preventing resource exhaustion.
+
+### 5.3.4.2. Disaster Recovery (DR) Strategy (Conceptual)
+
+While the HA strategy addresses failures within a single AWS Region, the DR strategy considers recovery from larger-scale events that might affect an entire region. For this conceptual architecture, a phased DR approach would be considered, with the initial focus on backup and restore, and more advanced strategies as future enhancements.
+
+* **Recovery Time Objective (RTO) & Recovery Point Objective (RPO):**
+    * For a production system, specific RTO (how quickly the service must be restored) and RPO (how much data loss is acceptable) targets would be defined based on business impact analysis. These targets would drive the choice of DR strategy. For this conceptual document, we assume a moderate RTO/RPO allowing for a backup/restore approach initially.
+
+* **Key DR Components:**
+    * **Data Backup & Restore:**
+        * **Amazon Neptune:** Automated daily snapshots and continuous backups will be enabled. These snapshots can be copied to another AWS Region. In a DR scenario, the infrastructure can be re-provisioned in the DR region using IaC, and the Neptune cluster can be restored from a snapshot.
+        * **Amazon DynamoDB:** Point-in-Time Recovery (PITR) will be enabled, allowing restoration to any point in the preceding 35 days. On-demand backups can also be taken and copied to S3 in another region for DR. DynamoDB Global Tables could be considered for live multi-region replication if near-zero RPO/RTO is a future requirement.
+        * **Amazon S3:** Critical data in S3 (e.g., raw source documents, processed data, LLM-extracted facts, Neptune load files) can be configured with Cross-Region Replication (CRR) to automatically replicate objects to a bucket in a DR region. S3 Versioning will also be enabled to protect against accidental deletions or overwrites.
+    * **Infrastructure as Code (IaC):**
+        * The entire infrastructure defined using AWS CDK or CloudFormation (Section 5.2.5) is version-controlled and can be deployed in a DR region to recreate the application environment.
+    * **Application Code & Configuration:**
+        * Application code (Lambda functions, Glue scripts) is stored in version control (Git) and can be deployed to the DR region via the CI/CD pipeline (Section 5.2.6).
+        * Configuration parameters would need to be managed for the DR environment.
+    * **DNS Failover (Amazon Route 53):**
+        * If the application has a custom domain name, Amazon Route 53 can be used for DNS management. Health checks and DNS failover policies can be configured to redirect traffic to resources in the DR region if the primary region becomes unavailable.
+
+* **Conceptual DR Strategies (Phased Approach):**
+    1.  **Backup and Restore (Initial):** The simplest DR approach, relying on restoring data backups and redeploying infrastructure and application code in a DR region. This typically has higher RTO/RPO.
+    2.  **Pilot Light (Future Consideration):** A minimal version of the core infrastructure (e.g., a small Neptune cluster, replicated S3 data) is kept running in the DR region. In a disaster, this core can be scaled up, and the full application deployed. This reduces RTO compared to pure backup/restore.
+    3.  **Warm Standby (Future Consideration):** A scaled-down but fully functional version of the system runs in the DR region, with data being actively replicated (e.g., Neptune cross-region replicas if available, DynamoDB Global Tables, S3 CRR). Failover is quicker, reducing RTO/RPO further.
+    4.  **Multi-Site Active-Active (Future Consideration - High Complexity/Cost):** Running the full application in multiple regions simultaneously. This offers the lowest RTO/RPO but is the most complex and costly to implement and manage. Not envisioned for the initial architecture.
+
+This HA/DR strategy aims to provide a resilient platform by leveraging AWS regional capabilities and standard recovery patterns. The specific DR approach would be refined based on business continuity requirements for a production deployment.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
