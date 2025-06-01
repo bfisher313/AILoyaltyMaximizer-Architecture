@@ -178,6 +178,61 @@ Network security is a critical component of the defense-in-depth strategy for th
 
 This layered network security approach, from the VPC boundary down to individual resource firewalls and private endpoints, aims to create a resilient and secure operational environment for the AI Loyalty Maximizer Suite.
 
+### 6.1.5. Application Security
+
+Beyond network and infrastructure security, specific measures will be taken at the application level to protect the AI Loyalty Maximizer Suite from vulnerabilities and ensure secure data handling within its components.
+
+**A. Input Validation:**
+
+* **API Gateway Level:** Amazon API Gateway will be configured to perform basic request validation on incoming API calls to the `Conversational API`. This includes validating request parameters, headers, and message body structure against a defined JSON schema. This helps reject malformed or unexpected requests early.
+* **Lambda Function Level:** All AWS Lambda functions, especially those handling external input (e.g., from API Gateway or processing S3 event payloads), will perform strict input validation. This includes:
+    * Validating data types, formats, ranges, and lengths.
+    * Sanitizing input to prevent injection attacks (though the primary interaction is conversational, any parameters passed to backend systems or used in queries must be handled safely).
+    * Ensuring all required parameters are present.
+
+**B. Output Encoding:**
+
+* While the primary interface is conversational, if any data from the system is to be rendered in a web context or other UI in the future, proper output encoding (e.g., HTML encoding for web display) will be applied to prevent Cross-Site Scripting (XSS) vulnerabilities. Responses from the `Conversational API` will be structured (e.g., JSON) to be safely consumed by client applications.
+
+**C. Authentication & Authorization (Application Layer):**
+
+* **Authentication:** As defined in Section 6.1.3 (IAM), user authentication will be handled at the edge by API Gateway, potentially using Amazon Cognito or Lambda Authorizers. The backend application logic will receive authenticated principal information.
+* **Authorization:** Within the application logic (e.g., in the `LLM Orchestration Service` or `User Profile Service`), further authorization checks will ensure that users can only access or modify data they are permitted to (e.g., a user can only retrieve their own profile). This will be based on the authenticated user identity passed from the API Gateway.
+
+**D. Secure Handling of Secrets:**
+
+* **AWS Secrets Manager or AWS Systems Manager Parameter Store (SecureString):** For any application secrets such as third-party API keys (if any were to be used in the future, though not a core part of the current design), or credentials for services not accessible via IAM roles alone, these services will be used.
+    * Secrets will be encrypted at rest.
+    * Fine-grained IAM permissions will control which Lambda functions or Glue jobs can access specific secrets.
+    * Secrets will be retrieved at runtime and not hardcoded in application code or configuration files.
+* **IAM Roles for AWS Services:** For accessing AWS services (Bedrock, Neptune, DynamoDB, S3, etc.), IAM roles with temporary credentials are the primary and preferred method, eliminating the need to manage long-lived API keys within the application code.
+
+**E. Secure LLM Interaction (Amazon Bedrock):**
+
+* **Prompt Engineering & Input Sanitization:** While Amazon Bedrock provides a secure environment for LLM interactions, care will be taken in how user-provided input is incorporated into prompts sent to the LLMs.
+    * Conceptual strategies include input sanitization or validation before embedding user data into prompts to mitigate risks associated with prompt injection.
+    * Contextual boundaries will be clearly defined in prompts to guide the LLM and limit its scope of action or information retrieval.
+* **Data Privacy:** When sending data to Bedrock, the system will adhere to the principle of data minimization, sending only necessary information for the task. AWS Bedrock's data privacy commitments (e.g., not using customer data to train base models) are a key benefit.
+
+**F. Dependency Management & Vulnerability Scanning:**
+
+* **Secure Dependencies:** As outlined in Section 5.2.4 (Build & Packaging Strategy), Poetry will be used for robust Python dependency management, including the use of lock files to ensure deterministic and known dependencies.
+* **Vulnerability Scanning:**
+    * The CI/CD pipeline (Section 5.2.6) will incorporate steps to scan application dependencies for known vulnerabilities (e.g., using tools like GitHub Dependabot, `pip-audit`, or AWS Inspector if Lambda functions are deployed as container images).
+    * Regular updates to dependencies will be managed to patch vulnerabilities.
+
+**G. Secure Coding Practices:**
+
+* Development will adhere to secure coding principles, including proper error handling, avoiding hardcoded secrets, and implementing appropriate logging.
+* Code reviews (as part of the Pull Request process detailed in Section 5.2.6), potentially augmented by AI code review tools, will include checks for common security anti-patterns.
+
+**H. Robust Error Handling & Logging (Security Context):**
+
+* Application error messages returned to users will be generic and avoid exposing sensitive system information or internal stack traces.
+* Detailed error information, including security-relevant events (e.g., failed authorization attempts, unexpected input patterns), will be logged securely in Amazon CloudWatch Logs for auditing and incident response purposes. Access to these logs will be restricted.
+
+By implementing these application security measures, the goal is to build a resilient application layer that protects against common threats and safeguards any data processed by the AI Loyalty Maximizer Suite.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
