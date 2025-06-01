@@ -157,6 +157,33 @@ A well-defined build and packaging strategy is essential for creating deployable
 
 This strategy ensures robust dependency management during development using modern tools like Poetry, leading to consistent and reliable deployment artifacts for all Python-based components of the AI Loyalty Maximizer Suite.
 
+## 5.2.5. Infrastructure as Code (IaC) Strategy
+
+A core principle for the development and deployment of the AI Loyalty Maximizer Suite is the comprehensive use of Infrastructure as Code (IaC). All cloud resources required to run the application will be defined, provisioned, and managed through code, rather than manual configuration via the AWS Management Console.
+
+**Chosen IaC Tools:**
+
+* **AWS Cloud Development Kit (CDK):** This is the preferred IaC framework for this project. AWS CDK allows for defining cloud infrastructure using familiar programming languages (such as Python or TypeScript), providing higher-level abstractions, better code organization, and the ability to use software engineering constructs like loops, conditionals, and object-oriented programming. This leads to more expressive and maintainable infrastructure definitions.
+* **AWS CloudFormation:** As AWS CDK synthesizes down to AWS CloudFormation templates, CloudFormation remains the underlying provisioning engine. Direct use of CloudFormation templates (YAML/JSON) may be considered for specific, simpler resources or if integrating with existing CloudFormation stacks, but CDK will be the primary interface for defining resources.
+
+**Benefits of Adopting IaC:**
+
+* **Repeatability & Consistency:** IaC ensures that infrastructure deployments are repeatable and consistent across different environments (e.g., development, staging, production), eliminating manual configuration errors and "environment drift."
+* **Version Control:** Infrastructure definitions are stored in version control (Git) alongside application code. This provides a history of changes, enables code reviews for infrastructure modifications, and supports rollback to previous known good configurations.
+* **Automation:** IaC enables the full automation of infrastructure provisioning and updates, typically integrated into CI/CD pipelines. This speeds up deployments and reduces manual effort.
+* **Scalability:** IaC makes it easier to scale infrastructure up or down by modifying code parameters and redeploying.
+* **Disaster Recovery:** In a disaster recovery scenario, IaC allows for the rapid and reliable re-provisioning of the entire infrastructure in a different region or account.
+* **Documentation:** The IaC code itself serves as living documentation for the infrastructure setup.
+* **Cost Management:** By defining resources in code, it's easier to track, audit, and potentially optimize resource configurations for cost.
+
+**Conceptual IaC Structure:**
+
+* **Modular Stacks:** The infrastructure will be organized into modular stacks, likely aligned with the major services or components of the application (e.g., a VPC stack, an API stack, a data pipeline stack, a knowledge base stack, individual Lambda function stacks). This promotes better organization, independent deployment of service components where appropriate, and adherence to CloudFormation stack limits.
+* **Parameterization:** Stacks will be parameterized to allow for environment-specific configurations (e.g., instance sizes, VPC CIDR ranges, resource names) without duplicating code.
+* **Cross-Stack References:** AWS CDK (and CloudFormation) mechanisms for cross-stack references will be used to link dependent resources (e.g., allowing an API Lambda function stack to reference an S3 bucket or DynamoDB table created in a data store stack).
+
+The IaC strategy is fundamental to achieving agile, reliable, and scalable deployments for the AI Loyalty Maximizer Suite, integrating seamlessly with the CI/CD pipeline detailed in the next section.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
