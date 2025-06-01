@@ -64,6 +64,77 @@ This subsection details how the logical C4 Level 2 containers, defined in Sectio
     * **Rationale:** SNS provides a decoupled and scalable way to manage notifications. Lambda offers the compute for message formatting and dispatch logic.
 
 This mapping illustrates how the logical architecture translates into a tangible set of cloud services, each chosen for its specific strengths in fulfilling the responsibilities of the corresponding container.
+
+## 5.3.3. Network Design
+
+A well-architected network foundation is critical for security, scalability, and manageability. The AI Loyalty Maximizer Suite will be deployed within a custom Amazon Virtual Private Cloud (VPC), providing a logically isolated section of the AWS Cloud.
+
+**[🚧 TODO: Insert Detailed Network Diagram here, showing VPC, Subnets, Route Tables, Gateways, Endpoints, and Security Group interactions. See GitHub Issue #12m 🚧]**
+
+### 5.3.3.1. Amazon VPC Strategy
+
+* **Primary Region:** The system will be deployed within a single primary AWS Region (e.g., `us-east-1` or `us-west-2`), chosen based on factors like latency to users, service availability, and cost. A multi-region strategy for Disaster Recovery is a future consideration (see Section 5.3.4).
+* **Single VPC Design:** For the current scope, a single VPC is deemed sufficient to host all application resources. This simplifies network management while still allowing for strong segmentation using subnets and security groups.
+* **VPC CIDR Block:** A non-overlapping IP address range will be selected for the VPC (e.g., `10.0.0.0/16`), providing ample IP address space for current and future resources.
+
+### 5.3.3.2. Subnet Design
+
+To ensure high availability and network segmentation, subnets will be distributed across multiple Availability Zones (AZs) within the chosen AWS Region (typically 2-3 AZs).
+
+* **Public Subnets:**
+    * **Purpose:** To host resources that require direct inbound or outbound internet connectivity, such as NAT Gateways or Application Load Balancers (ALBs), if ALBs were to be used in front of API Gateway for specific purposes like WAF integration or custom domain handling at the edge (though API Gateway often handles this directly).
+    * **Distribution:** At least one public subnet per utilized AZ.
+    * **Routing:** Associated with a route table that directs internet-bound traffic (`0.0.0.0/0`) to an Internet Gateway (IGW).
+* **Private Subnets (Application Tier):**
+    * **Purpose:** To host the majority of the application resources, including AWS Lambda functions (when configured to access VPC resources or require controlled outbound access), AWS Fargate tasks (if used), and interface VPC endpoints for AWS services. These resources do not have direct inbound internet access.
+    * **Distribution:** At least one application private subnet per utilized AZ for HA.
+    * **Routing:** Associated with a route table that directs internet-bound traffic (`0.0.0.0/0`) to NAT Gateways (located in the public subnets) for controlled outbound internet access (e.g., for Lambda/Glue to access external APIs if not using VPC endpoints, or for OS updates if using EC2-based services).
+* **Private Subnets (Data Tier - Isolated):**
+    * **Purpose:** To host data stores like Amazon Neptune database instances and Amazon ElastiCache (if used for caching). These subnets are designed for maximum security with no direct internet access (inbound or outbound).
+    * **Distribution:** At least one data private subnet per utilized AZ for HA of Neptune (Multi-AZ deployment).
+    * **Routing:** Associated with a route table that does *not* have a route to an Internet Gateway or NAT Gateway. Access to AWS services will be exclusively through VPC Endpoints.
+
+### 5.3.3.3. Routing & Internet Access
+
+* **Internet Gateway (IGW):** Attached to the VPC to allow communication between resources in public subnets and the internet.
+* **NAT Gateways:** Deployed in each public subnet (one per AZ for redundancy and HA) and assigned Elastic IP addresses. Private subnets requiring outbound internet access will have routes pointing to these NAT Gateways. This allows resources in private subnets to access external services (e.g., third-party APIs, software repositories) without exposing them to direct inbound internet connections.
+* **Route Tables:** Custom route tables will be created and associated with each subnet to precisely control traffic flow.
+
+### 5.3.3.4. Security Groups (SGs)
+
+* **Role:** Act as stateful virtual firewalls at the resource level (e.g., for Lambda functions, Neptune instances, Glue connections, VPC endpoints).
+* **Principle of Least Privilege:** Inbound and outbound rules will be strictly defined to allow only necessary traffic. For example:
+    * The Security Group for Amazon Neptune will only allow inbound traffic on the database port from the Security Groups associated with the application Lambda functions (e.g., those in the `Knowledge Base Service` or `LLM Orchestration Service` that query the graph).
+    * Lambda function Security Groups will allow outbound traffic to required AWS service endpoints (via VPC Endpoints) and specific external APIs if necessary (via NAT Gateway).
+    * Security Groups for public-facing resources (like NAT Gateways, or ALBs if used) will be configured accordingly.
+
+### 5.3.3.5. Network ACLs (NACLs)
+
+* **Role:** Act as stateless firewalls at the subnet level, providing an additional, optional layer of defense.
+* **Strategy:** NACLs will be kept relatively broad initially, allowing all traffic between application and data tier subnets within the VPC by default, and relying more heavily on the granular control of Security Groups. Specific deny rules can be added to NACLs for known malicious IPs or to enforce broader network segmentation policies if required.
+
+### 5.3.3.6. VPC Endpoints (AWS PrivateLink & Gateway Endpoints)
+
+To enhance security and reduce data transfer costs by keeping traffic within the AWS network, VPC Endpoints will be extensively used:
+
+* **Gateway Endpoints:**
+    * **Amazon S3:** For private access to S3 buckets from within the VPC (e.g., for Lambda functions, Glue jobs accessing raw data, processed data, or Neptune load files).
+    * **Amazon DynamoDB:** For private access to DynamoDB tables (e.g., the `User Profile Service`).
+* **Interface Endpoints (AWS PrivateLink):**
+    * **AWS Lambda:** For invoking Lambda functions privately.
+    * **Amazon API Gateway (Private API Endpoints):** If internal services need to call API Gateway endpoints privately.
+    * **Amazon Bedrock:** For private communication with LLMs.
+    * **AWS Step Functions:** For private interaction with state machines.
+    * **AWS Glue:** For private access to Glue service endpoints (e.g., for Glue jobs to communicate with the Glue service).
+    * **Amazon CloudWatch Logs:** For sending logs privately from resources within the VPC.
+    * **Amazon SNS:** For private publishing or subscribing to topics.
+    * **Amazon Textract:** For private calls to the Textract service.
+    * **Amazon ECR (if using container images for Lambda):** For private pulling of container images.
+    * **AWS KMS:** For private access to encryption keys.
+* **Placement:** Interface endpoints will be provisioned in the private application subnets, with DNS resolution enabled, allowing resources in those subnets to access AWS services using their standard public DNS names but over private connections.
+
+This network design aims to create a secure, segmented, and highly available foundation for the AI Loyalty Maximizer Suite, utilizing best practices for AWS networking.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
