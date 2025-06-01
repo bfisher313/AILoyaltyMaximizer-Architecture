@@ -462,6 +462,58 @@ Designing a cost-effective solution is a key architectural goal for the AI Loyal
 **Ongoing Optimization:**
 Cost optimization is not a one-time activity but an ongoing process. Regular reviews of AWS spending, usage patterns, and new AWS service features or pricing models will be conducted to identify further opportunities for cost reduction while maintaining performance and reliability.
 
+## 6.5. Monitoring, Logging, & Observability
+
+Comprehensive monitoring, robust logging, and effective observability are essential for maintaining the health, performance, and reliability of the AI Loyalty Maximizer Suite. This strategy focuses on leveraging AWS native services to gain deep insights into the system's behavior, detect issues proactively, and facilitate rapid troubleshooting.
+
+**Key Observability Goals:**
+
+* **System Health & Availability:** Continuously track the operational status and availability of all architectural components.
+* **Performance Monitoring:** Measure and analyze key performance indicators (KPIs) such as request latency, throughput, error rates, and resource utilization.
+* **Troubleshooting & Diagnostics:** Provide detailed logs and traces to quickly diagnose and resolve operational issues and application errors.
+* **Usage Insights:** Gather data to understand how the system is being utilized and identify patterns or trends (operational metrics).
+* **Security Event Correlation:** Ensure security-related logs (detailed in Section 6.1.6) are integrated into the overall observability framework for a unified view.
+
+**Core AWS Services for Observability:**
+
+1.  **Amazon CloudWatch:**
+    * **Logs (Amazon CloudWatch Logs):**
+        * **Centralized Logging:** All AWS Lambda functions, AWS Glue ETL jobs, Amazon API Gateway access and execution logs, AWS Step Functions execution history, Amazon Bedrock invocation logs (if enabled), Amazon Neptune audit logs (if enabled), and VPC Flow Logs will be configured to send logs to CloudWatch Logs.
+        * **Structured Logging:** Application code (Lambda, Glue) will implement structured logging (e.g., JSON format) to include important contextual information like correlation IDs, request IDs, user identifiers (where appropriate and anonymized if necessary), and key business process identifiers. This facilitates easier searching and analysis.
+        * **Log Retention:** Appropriate log retention policies will be defined for different log groups based on operational and compliance needs.
+        * **Log Analysis (CloudWatch Logs Insights):** Powerful ad-hoc querying and analysis of log data will be used for troubleshooting, performance investigation, and understanding application behavior.
+    * **Metrics (Amazon CloudWatch Metrics):**
+        * **Standard AWS Metrics:** Leverages the rich set of metrics automatically published by AWS services (Lambda invocations/errors/duration, API Gateway latency/4XX/5XX errors, DynamoDB consumed capacity/latency, Neptune CPU/memory/query latency, S3 request metrics, Glue job metrics, Step Functions execution metrics, Bedrock invocation metrics).
+        * **Custom Application Metrics:** Application components (Lambda, Glue) will publish custom metrics to CloudWatch to track business-specific KPIs (e.g., `AwardSearchesPerformed`, `EarningsCalculatedSuccessfully`, `DocumentsProcessedByIngestionPipeline`, `LLMTokenUsagePerQueryType`, `GraphUpdateSuccessRate`).
+    * **Alarms (Amazon CloudWatch Alarms):**
+        * Alarms will be configured based on thresholds for key metrics (e.g., high error rates, increased latency, low resource availability) or specific patterns in CloudWatch Logs (e.g., critical error messages).
+        * These alarms will trigger notifications via Amazon SNS to operations teams or relevant stakeholders, enabling proactive responses.
+    * **Dashboards (Amazon CloudWatch Dashboards):**
+        * Custom dashboards will be created to provide a consolidated, real-time view of the system's health, performance, and key operational metrics, tailored for different operational roles.
+
+2.  **AWS X-Ray (Distributed Tracing):**
+    * **End-to-End Request Tracing:** AWS X-Ray will be enabled for supported services like Amazon API Gateway and AWS Lambda to trace user requests as they propagate through the various components of the distributed system.
+    * **Performance Bottleneck Identification:** X-Ray helps visualize the call graph, identify performance bottlenecks, and understand latency contributions from downstream services (including calls to Amazon Bedrock, Neptune, DynamoDB, etc.).
+    * **Error Analysis:** Helps pinpoint where errors originate in a distributed workflow.
+    * **Sampling:** Trace sampling rules will be configured to manage the volume of traces and associated costs while still capturing representative data.
+
+3.  **AWS CloudTrail (Audit & Operational Tracking):**
+    * As detailed in the Security Architecture (Section 6.1.6), CloudTrail provides an audit log of all AWS API calls. This is also invaluable for operational troubleshooting, understanding changes made to the environment, and tracking resource lifecycle events.
+
+**Application-Level Observability Practices:**
+
+* **Correlation IDs:** A unique correlation ID will be generated at the start of each user request (e.g., at the API Gateway or initial Lambda) and propagated through all subsequent service calls and log messages related to that request. This allows for tracing an entire operation across multiple components and logs.
+* **Health Check Endpoints (Conceptual):** For key services or APIs, conceptual health check endpoints can be defined to allow external monitoring tools or load balancers (if used) to assess their operational status.
+* **Business Transaction Monitoring:** Custom metrics and dashboards can be designed to monitor the health and performance of key business transactions (e.g., the end-to-end success rate and latency of "calculate flight earnings" requests).
+
+**Data Ingestion Pipeline Observability:**
+
+* **AWS Step Functions Visual Workflow:** The visual workflow in the Step Functions console provides real-time and historical views of pipeline executions, including the status of each step, input/output data, and error details.
+* **AWS Glue Job Monitoring:** Glue Studio provides visual monitoring for ETL jobs, and detailed logs and metrics are available in CloudWatch.
+* **Custom Pipeline Metrics:** Specific metrics will track the number of documents entering the pipeline, successfully processed through each stage, failed, and loaded into Neptune.
+
+By implementing this comprehensive strategy for monitoring, logging, and observability, the operations team will have the necessary tools and insights to maintain the AI Loyalty Maximizer Suite's reliability, performance, and health, and to quickly address any issues that may arise.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
