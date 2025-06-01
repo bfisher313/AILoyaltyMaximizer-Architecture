@@ -130,6 +130,54 @@ In addition to IAM policies (identity-based), resource-based policies will be ut
 
 By implementing these IAM strategies, the AI Loyalty Maximizer Suite aims to ensure that only authorized entities (both human and service principals) can access specific resources and perform only their intended actions, thereby minimizing security risks.
 
+### 6.1.4. Network Security
+
+Network security is a critical component of the defense-in-depth strategy for the AI Loyalty Maximizer Suite. It involves creating secure network boundaries, controlling traffic flow, and minimizing the attack surface for all application resources deployed within the AWS cloud. The foundation of this is the custom Amazon Virtual Private Cloud (VPC) detailed in Section 5.3.3.
+
+**A. VPC for Isolation:**
+
+* A dedicated Amazon VPC provides a private, logically isolated network environment for all application resources. This prevents unsolicited access from the public internet and allows for granular control over internal network traffic.
+
+**B. Subnet Segmentation for Tiered Security:**
+
+* The VPC is segmented into different types of subnets, each with specific routing and security characteristics, distributed across multiple Availability Zones for high availability:
+    * **Public Subnets:** Host only resources that explicitly require direct internet connectivity, such as NAT Gateways. Their exposure is strictly limited.
+    * **Private Application Subnets:** Host the majority of compute resources like AWS Lambda functions (when VPC-enabled) and AWS Glue job network interfaces. These subnets do not have direct inbound internet access. Outbound internet access (e.g., for accessing external APIs or software repositories) is routed through NAT Gateways.
+    * **Private Data Subnets (Isolated):** Host sensitive data stores like the Amazon Neptune cluster. These subnets are configured with no route to the internet (neither IGW nor NAT Gateway), and access to AWS services is exclusively through VPC Endpoints. This provides the highest level of network isolation for the data tier.
+
+**C. Traffic Control Mechanisms:**
+
+* **Security Groups (SGs):**
+    * Act as stateful virtual firewalls at the resource level (e.g., for Lambda functions, Neptune instances, VPC endpoints, Glue connections).
+    * The principle of least privilege is applied: SGs will only allow traffic on the specific ports and protocols required for each component to function and communicate with other authorized components. For example, the Neptune SG will only allow inbound traffic on its database port from the SGs of specific application Lambda functions.
+    * Default SGs will be modified to deny all traffic unless explicitly allowed.
+* **Network Access Control Lists (NACLs):**
+    * Act as stateless firewalls at the subnet level, providing an additional layer of defense.
+    * NACLs will be used for broader allow/deny rules (e.g., allowing necessary traffic between trusted subnets, explicitly denying traffic from known malicious IP ranges if identified). They are generally kept less granular than SGs, which provide finer-grained control.
+* **Internet Gateway (IGW):** Provides the VPC with access to and from the internet. Only public subnets have a direct route to the IGW.
+* **NAT Gateways:** Deployed in public subnets (and made highly available across AZs), these allow resources in private subnets to initiate outbound connections to the internet while preventing unsolicited inbound connections.
+
+**D. Private Connectivity to AWS Services (VPC Endpoints):**
+
+* To ensure that communication between resources within the VPC and other AWS services does not traverse the public internet, VPC Endpoints (both Gateway and Interface types via AWS PrivateLink) will be extensively used, as detailed in Section 5.3.3.6.
+* This enhances security by reducing data exposure to the public internet, simplifies network paths, and can also improve performance and reduce data transfer costs. Services like S3, DynamoDB, Lambda, Bedrock, Step Functions, Glue, Textract, SNS, CloudWatch Logs, and KMS will be accessed via these private endpoints from within the VPC.
+
+**E. Edge Security (Amazon API Gateway):**
+
+* Amazon API Gateway, serving as the entry point for the `Conversational API`, provides several network security benefits at the edge:
+    * It acts as a front door, abstracting and protecting backend Lambda functions.
+    * **AWS WAF (Web Application Firewall)** will be integrated with API Gateway to protect against common web exploits such as SQL injection, Cross-Site Scripting (XSS), and other OWASP Top 10 vulnerabilities, even though the primary interaction is API-based.
+    * Built-in **throttling and usage plan capabilities** help mitigate the impact of DoS (Denial of Service) or abusive traffic patterns.
+    * Enforces authentication and authorization mechanisms (IAM, Amazon Cognito Lambda Authorizers) before requests reach backend services.
+
+**F. Intrusion Detection and Network Monitoring (Conceptual):**
+
+* For a production environment, services like **Amazon GuardDuty** would be enabled for intelligent threat detection across AWS accounts, workloads, and data stored in S3. GuardDuty continuously monitors for malicious activity and unauthorized behavior.
+* VPC Flow Logs would be enabled and sent to Amazon CloudWatch Logs or S3 for analysis, providing visibility into network traffic patterns for security auditing and troubleshooting.
+* Consideration would also be given to **AWS Network Firewall** if more granular, stateful network traffic inspection and filtering at the VPC level were required beyond SGs and NACLs.
+
+This layered network security approach, from the VPC boundary down to individual resource firewalls and private endpoints, aims to create a resilient and secure operational environment for the AI Loyalty Maximizer Suite.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
