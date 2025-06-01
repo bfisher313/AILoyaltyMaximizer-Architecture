@@ -187,8 +187,50 @@ While the HA strategy addresses failures within a single AWS Region, the DR stra
 
 This HA/DR strategy aims to provide a resilient platform by leveraging AWS regional capabilities and standard recovery patterns. The specific DR approach would be refined based on business continuity requirements for a production deployment.
 
+## 5.3.5. Environment Strategy (Conceptual)
+
+To support a structured development, testing, and release process for the AI Loyalty Maximizer Suite, a multi-environment strategy is essential. This approach allows for changes to be developed and validated in isolated environments before being promoted to production, minimizing risks and ensuring stability.
+
+**Proposed Environments:**
+
+* **Development (Dev):**
+    * **Purpose:** Used by developers for day-to-day development, experimentation, and unit testing. Data in this environment would typically be synthetic, sample data, or a heavily anonymized subset of production data (if applicable and compliant with data privacy).
+    * **Characteristics:** May have scaled-down resources to optimize costs. CI/CD will deploy feature branches or development branches to this environment frequently.
+* **Staging/Testing (Staging/Test):**
+    * **Purpose:** A stable environment that closely mirrors production. Used for integration testing, end-to-end testing, user acceptance testing (UAT), and performance testing before a production release.
+    * **Characteristics:** Should use a configuration as close to production as possible. Data might be a sanitized and anonymized snapshot of production data or a larger, more realistic synthetic dataset. Deployments are typically triggered after successful builds and tests on a main development or release branch.
+* **Production (Prod):**
+    * **Purpose:** The live environment used by end-users (`Travel Enthusiast`, `Data Curator`).
+    * **Characteristics:** Highest levels of availability, security, monitoring, and performance. Deployments to production are carefully controlled, often requiring manual approvals, and follow successful validation in the staging environment. Uses real user data and the complete knowledge graph.
+
+**Isolation Strategies within AWS:**
+
+The primary goal is to achieve strong isolation between these environments to prevent interference and ensure security.
+
+* **Separate AWS Accounts (Preferred Best Practice):**
+    * **Approach:** Each environment (Dev, Staging, Prod) would reside in its own dedicated AWS account. This provides the strongest level of isolation for resources, security (IAM policies, security groups), networking (VPCs can be completely separate), and billing.
+    * **Management:** AWS Organizations can be used to centrally manage multiple accounts, apply Service Control Policies (SCPs), and consolidate billing.
+* **Separate VPCs within a Single Account (Alternative):**
+    * **Approach:** If managing multiple AWS accounts is not feasible initially, environments can be isolated by deploying each into its own dedicated Virtual Private Cloud (VPC) within a single AWS account.
+    * **Considerations:** Requires careful IAM policy design to ensure resources in one environment's VPC cannot improperly access resources in another. Network peering or Transit Gateway would be needed if controlled communication between VPCs is required (though generally, strong isolation is preferred).
+* **Resource Naming and Tagging Conventions:**
+    * Regardless of the account/VPC strategy, a consistent naming convention (e.g., `dev-loyalty-api-lambda`, `prod-loyalty-neptune-cluster`) and resource tagging strategy (e.g., `Environment:Dev`, `Environment:Prod`, `Project:AIMaximizer`) will be strictly enforced for all AWS resources. This aids in identification, cost allocation, automation, and access control.
+
+**Promotion Process:**
+
+* Changes (application code and infrastructure code) will be promoted through the environments sequentially (Dev -> Staging -> Prod) via the CI/CD pipeline (as described in Section 5.2.6).
+* Each stage in the pipeline will deploy to the corresponding environment and run appropriate automated tests. Manual approvals will gate promotions to production.
+
+**Data Management Across Environments:**
+
+* Each environment will have its own independent instances of data stores (Amazon Neptune, Amazon DynamoDB, Amazon S3 buckets for pipeline staging).
+* Processes will be established for managing test data in non-production environments, ensuring that sensitive production data is not used directly in Dev or Staging without appropriate sanitization or anonymization.
+
+This multi-environment strategy, managed through IaC and CI/CD, provides a robust framework for developing, testing, and releasing the AI Loyalty Maximizer Suite in a controlled and reliable manner.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
 ---
-**(Placeholder for Previous/Next Navigation Links - We'll add these once the content for this page is drafted and we know the next page)**
+**Previous:** [5.2. Development View (System Organization & Realization)](./05_02_DEVELOPMENT_VIEW.md)
+**Next:** [6. Cross-Cutting Concerns](../../06_CROSS_CUTTING_CONCERNS.md)
