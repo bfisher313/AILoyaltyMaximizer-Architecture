@@ -184,8 +184,80 @@ A core principle for the development and deployment of the AI Loyalty Maximizer 
 
 The IaC strategy is fundamental to achieving agile, reliable, and scalable deployments for the AI Loyalty Maximizer Suite, integrating seamlessly with the CI/CD pipeline detailed in the next section.
 
+## 5.2.6. CI/CD (Continuous Integration/Continuous Deployment) Pipeline (Conceptual)
+
+A robust Continuous Integration/Continuous Deployment (CI/CD) pipeline is fundamental to an agile and efficient development lifecycle. For the AI Loyalty Maximizer Suite, a CI/CD pipeline will be conceptualized to automate the build, test, and deployment of both application code and infrastructure changes.
+
+**Goals of the CI/CD Pipeline:**
+
+* **Automation:** Automate all steps from code commit to deployment, reducing manual effort and errors.
+* **Consistency:** Ensure that every deployment follows the same standardized process.
+* **Early Feedback:** Integrate automated testing at various stages to catch issues early in the development cycle.
+* **Speed & Agility:** Enable frequent and reliable releases of new features and fixes.
+* **Traceability:** Maintain a clear audit trail of what was deployed, when, and by whom.
+
+**Conceptual Pipeline Stages & AWS Services:**
+
+**[🚧 TODO: Insert CI/CD Pipeline Diagram here. See GitHub Issue #10 🚧]**
+
+1.  **Source Stage (Version Control):**
+    * **Trigger:** The pipeline will be triggered by code commits to specific branches (e.g., `main`, `develop`, feature branches) in a Git repository.
+    * **Service:** **GitHub** (as implied by current project management) or **AWS CodeCommit** (if a fully AWS-native toolchain is preferred).
+
+2.  **Build Stage (Code Compilation & Artifact Creation):**
+    * **Purpose:** To compile code (if applicable, e.g., for AWS CDK TypeScript), run linters, execute unit tests, package application code (Lambda ZIPs, Glue script packages), and synthesize IaC templates.
+    * **Service:** **AWS CodeBuild**.
+    * **Key Actions:**
+        * Fetch source code from the repository.
+        * Install development dependencies (e.g., using Poetry or by restoring a cached environment).
+        * Run static code analysis (e.g., Ruff, SonarQube if integrated).
+        * Execute unit tests (e.g., using `pytest`).
+        * Package Lambda functions and their dependencies into ZIP files.
+        * Package Glue scripts and their dependencies.
+        * Synthesize AWS CDK stacks into CloudFormation templates.
+        * Store built artifacts (e.g., Lambda ZIPs, CloudFormation templates) in Amazon S3 or directly pass them to the next stage.
+
+3.  **Test Stage (Integration & Further Automated Testing):**
+    * **Purpose:** To run integration tests that verify interactions between different components or services in a test environment. End-to-end tests for critical user flows could also be conceptualized here.
+    * **Service:** **AWS CodeBuild** (can be used to orchestrate tests) and potentially AWS Lambda for invoking test suites.
+    * **Key Actions:**
+        * Deploy the built artifacts to a dedicated test/staging environment (provisioned via IaC).
+        * Execute integration test suites.
+        * (Conceptual) Execute automated end-to-end tests using appropriate frameworks.
+        * Generate test reports.
+
+4.  **Deployment Stages (Staging & Production):**
+    * **Purpose:** To deploy the validated application and infrastructure changes to different environments.
+    * **Service:** **AWS CodePipeline** (to orchestrate the overall flow), **AWS CloudFormation** (or AWS CDK deployments via CodePipeline/CodeBuild) for IaC. For application code like Lambda functions or Glue scripts, deployment is often handled as part of the IaC stack update. AWS CodeDeploy could be used for more complex deployment strategies (e.g., blue/green, canary for Lambda) if needed in the future, but direct CloudFormation/CDK updates are often sufficient for serverless components.
+    * **Typical Flow:**
+        * **Deploy to Staging:** Automatically deploy to a staging environment that mirrors production.
+            * Conduct final automated acceptance tests or allow for manual QA/review.
+        * **Manual Approval (Optional):** A manual approval gate in AWS CodePipeline before deploying to production.
+        * **Deploy to Production:** Deploy to the production environment.
+            * Implement strategies for safe deployments (e.g., canary releases or blue/green for critical components if using CodeDeploy or advanced Lambda deployment configurations).
+
+**Key CI/CD Practices:**
+
+* **Branching Strategy:** A clear Git branching strategy (e.g., GitFlow, GitHub Flow) will be adopted to manage feature development, releases, and hotfixes.
+* **Pull Request (PR) and Code Review Process:**
+    * All code changes (including application code, IaC definitions, and updates to this architectural documentation itself) will be submitted via Pull Requests to the main development or release branches.
+    * PRs will require mandatory reviews by at least one other senior team member.
+    * Reviews will focus on code correctness, adherence to coding standards, architectural alignment, test coverage, and security considerations.
+    * Automated checks (linters, unit tests, vulnerability scans) within the CI pipeline must pass before a PR can be merged.
+* **Automated Testing:** Emphasis on comprehensive automated testing at unit, integration, and (conceptually) end-to-end levels.
+* **AI-Assisted Code Review (Conceptual/Future Enhancement):**
+    * To augment human code reviews and improve efficiency, the integration of AI-powered code review tools (e.g., GitHub Copilot with PR summaries, Amazon CodeGuru Reviewer, or other similar tools) would be considered.
+    * These tools can help in identifying potential bugs, performance issues, security vulnerabilities, deviations from best practices, and improve code readability and maintainability by providing automated suggestions.
+    * The goal of AI assistance would be to empower human reviewers, not replace them, allowing them to focus on more complex architectural and logical aspects of the changes.
+* **Infrastructure as Code (IaC) Integration:** Changes to infrastructure (defined in AWS CDK or CloudFormation) will be managed and deployed through the same CI/CD pipeline as application code.
+* **Monitoring & Rollback:** The pipeline will integrate with monitoring tools (Amazon CloudWatch) to observe deployment health. Clear rollback strategies (e.g., redeploying a previous version via CloudFormation/CDK or Lambda versioning) will be defined.
+* **Secrets Management:** Secure handling of secrets (API keys, database credentials) using services like AWS Secrets Manager, accessed by the CI/CD pipeline via IAM roles.
+
+This conceptual CI/CD pipeline, leveraging AWS developer tools, aims to ensure a streamlined, reliable, and automated path for delivering value for the AI Loyalty Maximizer Suite.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
 ---
-**(Placeholder for Previous/Next Navigation Links - We'll add these once the content for this page is drafted and we know the next page)**
+**Previous:** [5.1. Process View (Runtime Behavior & Concurrency)](./05_01_PROCESS_VIEW.md)
+**Next:** [5.3. Physical View (Deployment Architecture on AWS)](./05_03_PHYSICAL_VIEW_AWS_DEPLOYMENT.md)
