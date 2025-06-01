@@ -56,8 +56,57 @@ Ongoing maintenance and timely updates are essential for the security, performan
 
 This comprehensive approach to system maintenance and updates aims to ensure the AI Loyalty Maximizer Suite remains secure, performant, functional, and aligned with the latest technology advancements over its operational life.
 
+## 8.2. Backup and Recovery Procedures
+
+Robust backup and recovery procedures are essential to protect against data loss due to accidental deletion, corruption, or system failures, and to enable restoration of service in line with defined Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO). These procedures are a key component of the overall Disaster Recovery (DR) strategy outlined in Section 5.3.4.
+
+**1. Data Store Backup Procedures:**
+
+* **Amazon Neptune (Knowledge Graph):**
+    * **Automated Snapshots:** Neptune's automated backup feature will be enabled, creating daily snapshots of the database cluster. These snapshots will be retained for a configurable period (e.g., 7 to 35 days).
+    * **Continuous Backup & Point-in-Time Recovery (PITR):** Neptune automatically backs up transaction logs, enabling PITR to any point within the backup retention window (typically up to the last 5 minutes).
+    * **Manual Snapshots:** Manual snapshots can be taken before significant changes (e.g., major data loads, schema modifications) or for long-term archival beyond the automated retention period. These snapshots are stored in Amazon S3.
+    * **Cross-Region Snapshot Copying:** For DR purposes, key Neptune snapshots can be copied to a designated DR AWS Region.
+* **Amazon DynamoDB (User Profile Service):**
+    * **Point-in-Time Recovery (PITR):** PITR will be enabled for all DynamoDB tables storing user profile data. This provides continuous backups and allows restoration to any second within the preceding 35 days, protecting against accidental writes or deletes.
+    * **On-Demand Backups:** Full on-demand backups of DynamoDB tables can be created for long-term archival, specific recovery points, or to facilitate table duplication/restoration in different environments or regions. These backups are stored in Amazon S3.
+    * **AWS Backup:** AWS Backup service can be used to centrally manage and automate backup policies for DynamoDB tables, including lifecycle management and cross-region copying.
+* **Amazon S3 (Raw Data, Processed Data, Logs, etc.):**
+    * **Inherent Durability:** S3 Standard and S3 Standard-IA storage classes are designed for 99.999999999% (11 nines) of object durability by automatically replicating data across multiple Availability Zones within a region.
+    * **Versioning:** S3 Versioning will be enabled on all critical buckets (e.g., `loyalty-rules-raw-pages`, `loyalty-rules-processed-text`, `loyalty-rules-llm-extracted-facts`, Neptune load files, application logs). Versioning allows for the retrieval of previous versions of objects, protecting against accidental overwrites or deletions.
+    * **Cross-Region Replication (CRR):** As part of the DR strategy, CRR will be configured for critical S3 buckets to asynchronously replicate objects to a bucket in a designated DR AWS Region.
+    * **S3 Lifecycle Policies:** Will be used to manage object versions (e.g., transitioning old non-current versions to S3 Glacier or deleting them after a defined period) and to archive data according to retention policies.
+
+**2. Infrastructure & Configuration Backup:**
+
+* **Infrastructure as Code (IaC):** The primary "backup" for the infrastructure configuration is the set of AWS CDK or CloudFormation templates stored in the version-controlled Git repository (as detailed in Section 5.2.5). These templates allow for the repeatable and consistent re-provisioning of the entire AWS environment.
+* **Application Code & Scripts:** All application code (AWS Lambda functions, AWS Glue scripts) and AWS Step Functions state machine definitions (Amazon States Language JSON) are version-controlled in Git, serving as their backup.
+* **Lambda Function Versioning:** AWS Lambda's built-in versioning for deployed code provides an immediate rollback capability to previous stable versions.
+* **Configuration Parameters:** Critical configuration parameters (e.g., environment variables for Lambda, job parameters for Glue) are managed within the IaC templates or stored securely (e.g., AWS Systems Manager Parameter Store, AWS Secrets Manager) and backed up as part of those services' standard procedures or through their definition in IaC.
+
+**3. Recovery Procedures (Conceptual):**
+
+A detailed recovery plan would define specific procedures and the order of operations. Conceptually:
+
+* **Data Store Recovery:**
+    * **Neptune:** Restore a cluster from an automated or manual snapshot to a specific point in time. In a DR scenario, restore from a cross-region copied snapshot in the DR region.
+    * **DynamoDB:** Restore a table to a specific point in time using PITR, or restore from an on-demand backup to a new table. In a DR scenario, restore from a backup in the DR region or utilize Global Tables if implemented.
+    * **S3:** Restore specific object versions from versioned buckets. In a DR scenario, utilize data from CRR-replicated buckets in the DR region.
+* **Application & Infrastructure Recovery:**
+    * Re-deploy the entire infrastructure and application stack in the primary or DR region using the IaC templates (CDK/CloudFormation) and the CI/CD pipeline.
+    * For Lambda functions, deploy specific, known-good versions or roll back using aliases.
+* **Order of Restoration:** A recovery plan would prioritize critical components (e.g., data stores, core API services) to minimize RTO.
+
+**4. Testing Recovery Procedures:**
+
+* **Regular Testing:** It is crucial to regularly test backup and recovery procedures to ensure their effectiveness, validate RTO/RPO capabilities, and familiarize the operations team with the process.
+* **DR Drills:** Periodic DR drills would involve simulating a regional outage and attempting to restore the system in the DR region.
+
+These backup and recovery procedures, coupled with the HA and DR strategies, are designed to protect the AI Loyalty Maximizer Suite against data loss and ensure service restorability in various failure scenarios.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
 ---
-**(Placeholder for Previous/Next Navigation Links - We'll add these once the content for this page is drafted and we know the next page)**
+**Previous:** [7. Key Design Decisions & ADRs](./07_KEY_DESIGN_DECISIONS_ADRS.md)
+**Next:** [9. Future Roadmap](./09_FUTURE_ROADMAP.md)
