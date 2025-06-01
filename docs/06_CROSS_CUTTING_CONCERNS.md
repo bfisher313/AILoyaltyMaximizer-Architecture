@@ -87,6 +87,49 @@ The principle of data minimization will be applied, meaning the system will only
 
 This multi-faceted approach to data protection aims to secure data throughout its lifecycle within the AI Loyalty Maximizer Suite.
 
+### 6.1.3. Identity & Access Management (IAM)
+
+A robust Identity and Access Management (IAM) strategy is fundamental to securing the AI Loyalty Maximizer Suite and its underlying AWS resources. The principle of least privilege will be strictly enforced for all identities, whether they are human users or AWS services performing automated tasks.
+
+**A. IAM Roles for AWS Services (Service Principals):**
+
+IAM roles will be the primary mechanism for granting permissions to AWS services to interact with other AWS resources. Each service component (e.g., AWS Lambda functions, AWS Glue jobs, AWS Step Functions state machines, Amazon EC2 instances if any were used) will assume an IAM role with a narrowly defined IAM policy attached. This policy will grant only the specific permissions required for that component to perform its designated tasks.
+
+* **Examples of Service Roles:**
+    * **Lambda Function Roles:**
+        * `ConversationalAPILambdaRole`: Permissions to write logs to CloudWatch, invoke the `LLM Orchestration Service` (e.g., another Lambda or Step Functions), and potentially read from a configuration store.
+        * `LLMOrchestratorLambdaRole` (or Step Functions Role): Permissions to invoke Amazon Bedrock, call other MCP tool Lambda functions, interact with `User Profile Service` (DynamoDB) and `Knowledge Base Service` (Neptune), and manage Step Functions executions.
+        * `DataIngestionLambdaRoles` (for various pipeline steps): Specific permissions for each function, e.g., S3 read/write for specific buckets/prefixes, permission to invoke Amazon Textract, Amazon Bedrock, AWS Glue, or initiate Amazon Neptune loads.
+        * `UserProfileServiceLambdaRole`: Permissions to perform CRUD operations on the specific DynamoDB table for user profiles.
+        * `KnowledgeBaseServiceLambdaRole`: Permissions to query Amazon Neptune and read from S3 for RAG documents.
+    * **AWS Glue Job Role:** Permissions to read from source S3 buckets, write to target/staging S3 buckets, interact with Amazon Bedrock/Textract (if called from Glue), write to the AWS Glue Data Catalog (if used), and write logs to CloudWatch.
+    * **Amazon Neptune Role (for Bulk Loading):** An IAM role will be created that grants Neptune permission to read data from the designated S3 bucket containing the bulk load files.
+    * **AWS Step Functions Role:** Permissions to invoke Lambda functions, start Glue jobs, and manage its own execution state and logging.
+
+* **Policy Granularity:** Custom IAM policies will be crafted for each role, adhering to least privilege. For example, S3 access will be restricted to specific buckets and prefixes, and DynamoDB access to specific tables and actions. AWS Managed Policies will be used as a baseline where appropriate, but often supplemented or replaced by custom policies for tighter control.
+
+**B. IAM Users and Groups (for Human Access):**
+
+Human access to the AWS Management Console, AWS CLI, or AWS SDKs will be managed through IAM users and groups.
+
+* **IAM Users:** Individual IAM users will be created for developers, architects, `Data Curators` (if they require direct AWS access for uploads or monitoring, though pre-signed S3 URLs or dedicated upload applications are preferred for data submission), and administrators.
+* **IAM Groups:** Users will be organized into groups based on their roles and responsibilities (e.g., `AdministratorsGroup`, `DevelopersGroup`, `DataOpsGroup`). IAM policies granting necessary permissions will be attached to these groups rather than directly to individual users, simplifying permission management.
+* **Multi-Factor Authentication (MFA):** MFA will be enforced for all IAM users, especially for those with administrative or sensitive access, to provide an additional layer of security.
+* **Password Policies:** Strong password policies will be configured for IAM users.
+
+**C. AWS IAM Identity Center (AWS SSO) - Conceptual for Scaled Management:**
+
+For managing human access in a larger organizational setting or if integration with an existing corporate identity provider (IdP) like Azure AD or Okta is required, **AWS IAM Identity Center (formerly AWS SSO)** would be the recommended approach. This service allows for centralized management of user access to multiple AWS accounts and applications, using short-lived credentials. For this conceptual portfolio architecture, direct IAM user/group management is assumed for simplicity, but IAM Identity Center represents a best practice for scaled environments.
+
+**D. Resource-Based Policies:**
+
+In addition to IAM policies (identity-based), resource-based policies will be utilized where appropriate to further refine access control. Examples include:
+* **Amazon S3 Bucket Policies:** To define access permissions directly on S3 buckets, complementing IAM user/role policies.
+* **Amazon SNS Topic Policies:** To control who can publish or subscribe to SNS topics.
+* **AWS KMS Key Policies:** To control access to customer-managed encryption keys.
+
+By implementing these IAM strategies, the AI Loyalty Maximizer Suite aims to ensure that only authorized entities (both human and service principals) can access specific resources and perform only their intended actions, thereby minimizing security risks.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
