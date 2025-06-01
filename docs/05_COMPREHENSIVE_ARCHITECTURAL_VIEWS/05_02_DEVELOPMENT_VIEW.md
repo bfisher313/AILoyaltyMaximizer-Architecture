@@ -108,6 +108,55 @@ The selection of appropriate development languages, frameworks, and libraries is
 
 This selection of languages, SDKs, and libraries provides a robust foundation for developing the AI Loyalty Maximizer Suite, emphasizing Python's strengths in AI and data processing, deep integration with AWS, and adherence to modern development practices.
 
+## 5.2.4. Build & Packaging Strategy (Conceptual)
+
+A well-defined build and packaging strategy is essential for creating deployable artifacts that can be consistently and reliably deployed across different environments. This strategy emphasizes robust dependency management during development using tools like Poetry, followed by standardized packaging for deployment to AWS.
+
+**1. Python Application Components (AWS Lambda Functions, Python code for AWS Glue):**
+
+* **Dependency Management during Development:**
+    * **Poetry (or similar advanced manager like PDM or uv for `pip compile` workflows):** Will be used during development to manage Python dependencies for both AWS Lambda functions and AWS Glue Python Shell scripts.
+    * This involves using `pyproject.toml` to define abstract dependencies and generating a lock file (`poetry.lock` or equivalent) for deterministic resolution and reproducible environments during local development and testing.
+    * Development-only dependencies (e.g., `pytest`, linters) will be managed separately and excluded from production packages.
+
+* **Packaging AWS Lambda Functions (Python):**
+    * **Exporting Production Dependencies:** For deployment, production dependencies will be exported from Poetry to a standard `requirements.txt` file (e.g., using `poetry export -f requirements.txt --output requirements.txt --only main`).
+    * **Creating Deployment Package (ZIP):**
+        * A clean packaging directory will be created.
+        * Dependencies from the exported `requirements.txt` will be installed into this directory (e.g., using `pip install -r requirements.txt -t ./package_directory` or a faster equivalent like `uv pip install`).
+        * The Lambda handler function code (`.py` files) and any local modules will be copied into this directory.
+        * The contents of this directory will then be zipped to create the Lambda deployment package.
+    * **AWS Lambda Layers (Conceptual):** For common, relatively static dependencies shared across multiple Lambda functions, Lambda Layers will be utilized. These layers would also be built by installing exported requirements into the specific directory structure required by Lambda Layers.
+    * **Container Image Deployment (Alternative for Lambda):** For Lambda functions with very large dependencies or custom runtime needs, deploying them as container images (with dependencies installed via Poetry or the exported `requirements.txt` within the Dockerfile) remains an option. Amazon ECR would store these images.
+
+* **Packaging AWS Glue ETL Scripts (Python Shell Environment):**
+    * **Script Location:** Python scripts for AWS Glue jobs will be uploaded to Amazon S3.
+    * **Dependency Management:**
+        * Similar to Lambdas, Poetry will be used for developing Glue scripts and managing their Python dependencies locally.
+        * For deployment, if the Glue Python Shell job requires third-party libraries not available in the standard Glue environment:
+            * These dependencies (pinned versions obtained via Poetry) can be packaged into a ZIP file. This ZIP file is then uploaded to S3 and specified in the Glue job definition using the `--additional-python-modules` job parameter (or via `--extra-py-files` for single files/smaller archives).
+            * The packaging process would involve collecting the necessary library files (e.g., from a local install of the exported requirements) into the required structure.
+
+* **Environment Variables:** Configuration specific to an environment or function/job will be managed via Lambda environment variables or Glue job parameters, set during deployment by the IaC process.
+
+**2. AWS Step Functions State Machine Definitions:**
+
+* **Format:** State machine definitions are written in Amazon States Language (ASL), which is JSON.
+* **Deployment:** These JSON definitions are deployed as part of the infrastructure provisioning process, managed by IaC tools (AWS CDK or CloudFormation). They are versioned in source control.
+
+**3. Infrastructure as Code (IaC) Templates:**
+
+* **AWS CDK (TypeScript/Python):** CDK code is "synthesized" into AWS CloudFormation templates. This synthesis is a build step.
+* **AWS CloudFormation (JSON/YAML):** Template files are deployed directly.
+* **Packaging:** For larger templates or those with nested stacks, S3 is used to stage the template files.
+
+**General Build Principles:**
+
+* **Automation:** The build and packaging process for each component will be automated as part of the CI/CD pipeline (detailed in Section 5.2.6).
+* **Versioning:** All deployable artifacts (Lambda ZIPs, Glue script packages, IaC templates) will be versioned, ideally tied to source control tags or commit IDs, to ensure traceability and support rollback capabilities.
+
+This strategy ensures robust dependency management during development using modern tools like Poetry, leading to consistent and reliable deployment artifacts for all Python-based components of the AI Loyalty Maximizer Suite.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](../00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../../../README.md) of this repository.*
 
