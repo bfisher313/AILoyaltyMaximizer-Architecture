@@ -335,6 +335,67 @@ Scalability is a core architectural requirement for the AI Loyalty Maximizer Sui
 
 This multi-faceted approach ensures that the AI Loyalty Maximizer Suite is architected to scale efficiently and cost-effectively in response to growing demands.
 
+## 6.3. Resilience & Fault Tolerance
+
+Resilience and fault tolerance are critical architectural goals for the AI Loyalty Maximizer Suite, ensuring the system can withstand unexpected failures of individual components or services while minimizing impact on users and data integrity. The strategy focuses on redundancy, automated recovery, statelessness, and robust error handling.
+
+**Core Architectural Strategies for Resilience:**
+
+1.  **Redundancy Across Multiple Availability Zones (AZs):**
+    * As detailed in the High Availability strategy (Section 5.3.4.1), critical infrastructure components are deployed across multiple AZs within the chosen AWS Region. This includes:
+        * Amazon Neptune Multi-AZ deployments (primary and standby replica).
+        * Amazon DynamoDB data replication across AZs.
+        * Amazon S3 data storage across AZs.
+        * AWS Lambda, Amazon API Gateway, AWS Step Functions, and other regional services which operate across multiple AZs by default.
+        * NAT Gateways deployed in multiple AZs.
+    * This geographic distribution mitigates the risk of an entire AZ failure impacting the overall application availability.
+
+2.  **Stateless Application Components:**
+    * The majority of compute functions (AWS Lambda) are designed to be stateless. This means that if an instance of a function fails, another instance can immediately pick up new requests without loss of session context. State, when necessary, is managed externally in services like Amazon DynamoDB or AWS Step Functions.
+
+3.  **Decoupling and Asynchronous Processing:**
+    * The use of asynchronous patterns and decoupled services (e.g., S3 event triggers for the data ingestion pipeline, Step Functions for orchestration, Amazon SNS for notifications) helps isolate failures. An issue in one part of an asynchronous workflow (e.g., a single document failing in the ingestion pipeline) is less likely to cause a cascading failure across the entire system.
+    * Failed asynchronous tasks can often be retried independently.
+
+4.  **Idempotent Operations:**
+    * Where operations might be retried (e.g., steps within the Step Functions workflows, data ingestion tasks), they are designed to be idempotent where feasible. This ensures that performing an operation multiple times due to retries has the same end result as performing it successfully once, preventing data corruption or unintended side effects. (e.g., Deterministic ID generation for Neptune nodes, as discussed in Section 4.6.7).
+
+**Resilience Features of Key AWS Services:**
+
+* **AWS Lambda:**
+    * Offers built-in retry mechanisms for asynchronous invocations (e.g., from S3 events or SNS).
+    * For synchronous invocations (e.g., via API Gateway), the client (API Gateway) can implement retries.
+    * Dead-Letter Queues (DLQs) using Amazon SQS can be configured for asynchronous invocations to capture and isolate events that consistently fail processing.
+* **AWS Step Functions:**
+    * Provides robust error handling (`Catch` blocks) and retry logic (`Retry` blocks) that can be configured for each state in a workflow. This allows the data ingestion pipeline and complex LLM orchestrations to automatically recover from transient failures in integrated services (Lambda, Glue, Bedrock).
+* **Amazon API Gateway:**
+    * Highly available and fault-tolerant. Can be configured with retry mechanisms for backend integrations.
+* **Amazon Bedrock:**
+    * As a managed AWS service, Bedrock is designed for high availability. Client-side retry logic (e.g., in Lambda functions calling Bedrock) should still be implemented to handle transient API errors or throttling.
+* **Amazon Neptune:**
+    * Multi-AZ deployments provide automatic failover to a standby replica in a different AZ in case of primary instance failure, typically within minutes.
+    * Automated backups and Point-in-Time Recovery (PITR) allow for restoration to a specific time.
+* **Amazon DynamoDB:**
+    * Offers high availability and durability through automatic data replication across multiple AZs.
+    * Point-in-Time Recovery (PITR) and on-demand backups provide robust data recovery options.
+* **Amazon S3:**
+    * Designed for 99.999999999% (11 nines) of durability by redundantly storing objects across multiple AZs.
+    * Versioning can be enabled to protect against accidental overwrites or deletions and allow for recovery to previous versions.
+* **AWS Glue:**
+    * ETL jobs can be configured with retry mechanisms. Long-running Spark jobs can use checkpointing to S3 to save state and resume from the last checkpoint in case of failure.
+
+**Application-Level Error Handling:**
+
+* Individual Lambda functions and Glue scripts will implement comprehensive error handling (e.g., try-except blocks in Python) to catch exceptions, log detailed error information to Amazon CloudWatch Logs, and either fail gracefully or return appropriate error responses to callers (like Step Functions or API Gateway).
+* Error messages exposed to end-users will be generic and avoid revealing sensitive system details.
+
+**Monitoring for Failure Detection:**
+
+* Amazon CloudWatch Alarms will be configured to monitor key metrics and logs for signs of failure or degradation (e.g., Lambda error rates, Step Functions execution failures, Neptune health metrics, API Gateway 5XX errors).
+* These alarms will trigger notifications (via Amazon SNS) to enable prompt investigation and response.
+
+By combining these architectural patterns and AWS service capabilities, the AI Loyalty Maximizer Suite aims to be a resilient and fault-tolerant system, capable of providing continuous service and protecting data integrity even in the face of various failure scenarios.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
