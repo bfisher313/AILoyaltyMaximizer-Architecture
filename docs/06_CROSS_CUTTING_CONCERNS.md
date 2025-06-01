@@ -233,6 +233,59 @@ Beyond network and infrastructure security, specific measures will be taken at t
 
 By implementing these application security measures, the goal is to build a resilient application layer that protects against common threats and safeguards any data processed by the AI Loyalty Maximizer Suite.
 
+### 6.1.6. Logging & Monitoring for Security
+
+Effective logging and monitoring are crucial for maintaining a strong security posture, enabling the detection of suspicious activities, facilitating incident investigation, and providing an audit trail of actions performed within the AI Loyalty Maximizer Suite and its AWS environment.
+
+**A. AWS CloudTrail:**
+
+* **API Call Logging:** AWS CloudTrail will be enabled for the AWS account(s) to provide a comprehensive record of actions taken by users, roles, or AWS services. This includes API calls made to all AWS services used in the architecture (e.g., S3, Lambda, IAM, Neptune, DynamoDB, Bedrock, Glue, Step Functions).
+* **Audit Trail:** CloudTrail logs serve as a critical audit trail for security analysis, resource change tracking, and troubleshooting operational issues.
+* **Log Storage & Integrity:** CloudTrail logs will be securely stored in a dedicated S3 bucket with log file integrity validation enabled. Consideration will be given to replicating these logs to a separate, restricted AWS account for long-term archival and enhanced tamper-proofing.
+* **Integration:** CloudTrail logs can be integrated with Amazon CloudWatch Logs for real-time analysis and alarming, and queried using Amazon Athena.
+
+**B. Amazon CloudWatch Logs (Application & Service Logs):**
+
+* **Centralized Application Logging:** All AWS Lambda functions and AWS Glue jobs will be configured to send detailed application logs to Amazon CloudWatch Logs. These logs will include:
+    * Standard operational information (e.g., function start/end, duration).
+    * Business logic events and processed data summaries.
+    * **Security-Relevant Events:** Such as authentication attempts (successes and failures), authorization checks (successes and failures), input validation failures, significant application errors, and any detected suspicious activity patterns.
+* **Log Group Encryption:** As mentioned in Data Protection (Section 6.1.2), CloudWatch Log groups will be encrypted using AWS KMS.
+* **Log Filtering & Analysis:** CloudWatch Logs Insights will be used for interactive querying and analysis of log data to investigate security incidents or operational issues.
+* **Service Logs:** Other AWS services (e.g., API Gateway access logs, Neptune audit logs if configured, VPC Flow Logs) will also be configured to send logs to CloudWatch Logs or S3 for centralized analysis.
+
+**C. VPC Flow Logs:**
+
+* **Network Traffic Logging:** VPC Flow Logs will be enabled to capture information about IP traffic going to and from network interfaces in the VPC.
+* **Storage & Analysis:** These logs will be published to Amazon CloudWatch Logs or Amazon S3 for analysis. They are invaluable for:
+    * Monitoring network traffic patterns.
+    * Detecting anomalous or unauthorized traffic.
+    * Troubleshooting network connectivity issues related to Security Groups or NACLs.
+    * Providing data for security incident investigations.
+
+**D. Amazon GuardDuty (Threat Detection - Conceptual):**
+
+* For a production environment, **Amazon GuardDuty** would be enabled. GuardDuty is a managed threat detection service that continuously monitors for malicious activity and unauthorized behavior by analyzing multiple AWS data sources, including AWS CloudTrail event logs, VPC Flow Logs, and DNS logs.
+* It uses machine learning, anomaly detection, and integrated threat intelligence to identify and prioritize potential threats, generating security findings that can be reviewed and acted upon.
+
+**E. AWS Security Hub (Centralized Security Posture Management - Conceptual):**
+
+* In conjunction with GuardDuty and other AWS security services (like AWS Config for compliance checking, Amazon Inspector for vulnerability assessments), **AWS Security Hub** would be utilized in a production setting.
+* Security Hub provides a comprehensive view of high-priority security alerts and compliance status across AWS accounts. It aggregates, organizes, and prioritizes findings, enabling more efficient security posture management.
+
+**F. Alerting for Security Events:**
+
+* **Amazon CloudWatch Alarms:** Alarms will be configured based on specific metrics (e.g., sudden spikes in API errors, high CPU on critical resources) or CloudWatch Logs metric filters (e.g., detecting multiple failed login attempts, specific error patterns indicating potential attacks, IAM policy changes).
+* **GuardDuty/Security Hub Findings:** Alarms can also be triggered by high-severity findings from Amazon GuardDuty or AWS Security Hub.
+* **Notification Mechanism:** These alarms will be integrated with **Amazon SNS (Simple Notification Service)** to send immediate notifications to designated security personnel or operational teams (e.g., via email, SMS, or integration with incident management systems like PagerDuty).
+* **Automated Response (Conceptual Future Enhancement):** For certain types of well-defined security events, alarms could potentially trigger automated responses via AWS Lambda (e.g., isolating an instance, revoking credentials, though this requires careful design and testing).
+
+**G. Regular Log Review and Auditing:**
+
+* Beyond automated alerts, processes for regular (manual or semi-automated) review of key security logs and audit trails will be conceptually defined. This helps in proactively identifying subtle anomalies or patterns that automated systems might miss.
+
+This layered approach to logging and monitoring provides the necessary visibility and alerting capabilities to detect, investigate, and respond to security events, contributing to the overall security resilience of the AI Loyalty Maximizer Suite.
+
 ---
 *This page is part of the AI Loyalty Maximizer Suite - AWS Reference Architecture. For overall context, please see the [Architecture Overview](./00_ARCHITECTURE_OVERVIEW.md) or the main [README.md](../README.md) of this repository.*
 
