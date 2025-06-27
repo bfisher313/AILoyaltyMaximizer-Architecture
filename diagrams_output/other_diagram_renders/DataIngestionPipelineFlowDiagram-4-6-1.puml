@@ -1,0 +1,121 @@
+@startuml
+
+!theme materia
+title AI Loyalty Maximizer Suite - Data Ingestion Pipeline Flow (with AWS Icons)
+
+' Include AWS Icons - this requires internet access for the renderer
+' Or download the library and use !include C:/path/to/aws-icons-for-plantuml/dist/...puml
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/main/dist
+!includeurl AWSPuml/AWSCommon.puml
+!includeurl AWSPuml/Storage/SimpleStorageService.puml
+!includeurl AWSPuml/Compute/Lambda.puml
+!includeurl AWSPuml/ApplicationIntegration/StepFunctions.puml
+!includeurl AWSPuml/ArtificialIntelligence/Textract.puml
+!includeurl AWSPuml/ArtificialIntelligence/Bedrock.puml
+!includeurl AWSPuml/Analytics/Glue.puml
+!includeurl AWSPuml/Analytics/Athena.puml
+!includeurl AWSPuml/Database/Neptune.puml
+!includeurl AWSPuml/ApplicationIntegration/SimpleNotificationService.puml
+!includeurl AWSPuml/ManagementGovernance/CloudWatch.puml
+
+start
+
+partition "Data Curator Actions" {
+    :User <$Person> "Data Curator" uploads Source Document\n(HTML, PDF, TXT);
+    note right: To S3 Raw Bucket (s3://loyalty-rules-raw-pages/)
+}
+
+partition "AWS S3 <$SimpleStorageService> & Initial Trigger" {
+    :S3 ObjectCreated Event Triggers Lambda;
+    :AWS Lambda <$Lambda> "PipelineTriggerLambda" validates and initiates Step Functions workflow;
+}
+
+partition "AWS Step Functions <$StepFunctions> (DataIngestionWorkflow Orchestrator)" {
+    partition "Stage 1: Initial Processing & Dispatch" {
+        :AWS Lambda <$Lambda> "InitialDispatchLambda" receives S3 object metadata;
+        :AWS Lambda <$Lambda> "InitialDispatchLambda" reads file from S3 Raw Bucket <$S3>;
+        if (File type is PDF/Image?) then (yes)
+            :AWS Lambda <$Lambda> "InitialDispatchLambda" initiates async Textract job;
+            note right: StartDocumentAnalysis
+            :Amazon Textract <$Textract> processes document;
+            :Amazon Textract <$Textract> sends completion to SNS <$SNS> (TextractCompletionTopic);
+            :AWS Lambda <$Lambda> "TextractCallbackLambda" (triggered by SNS <$SNS>) retrieves Textract JSON output;
+            :AWS Lambda <$Lambda> "TextractCallbackLambda" stores JSON to S3 <$S3> Textract Output Staging;
+            note right: s3://loyalty-rules-textract-output/
+            :AWS Lambda <$Lambda> "TextractCallbackLambda" signals Step Functions <$StepFunctions> (Task Success/Failure with S3 Path);
+        else (HTML/TXT)
+\
+           :AWS Lambda <$Lambda> "InitialDispatchLambda" cleans text/HTML;
+            :AWS Lambda <$Lambda> "InitialDispatchLambda" stores cleaned text to S3 <$S3> Processed Text Staging;
+            note right: s3://loyalty-rules-processed-text/
+            :AWS Lambda <$Lambda> "InitialDispatchLambda" signals Step Functions <$StepFunctions> (Task Success/Failure with S3 Path);
+        endif
+    }
+
+    partition "Stage 2: Core Information Extraction" {
+        :AWS Glue <$Glue> "LoyaltyDataExtractionGlueJob" receives S3 path;
+        :AWS Glue <$Glue> "GlueJob" reads content from S3 <$S3>;
+        :AWS Glue <$Glue> "GlueJob" chunks, engineers prompts;
+        :AWS Glue <$Glue> "GlueJob" invokes LLM via Amazon Bedrock <$Bedrock>;
+        :Amazon Bedrock <$Bedrock> returns structured JSON "facts";
+        :AWS Glue <$Glue> "GlueJob" parses, validates, aggregates LLM output;
+        :AWS Glue <$Glue> "GlueJob" writes extracted facts to S3 <$S3> LLM Extracted Facts Staging;
+        note right: s3://loyalty-rules-llm-extracted-facts/
+        :AWS Glue <$Glue> "GlueJob" signals Step Functions <$StepFunctions> (Task Completion);
+    }
+
+    partition "Stage 3: Intermediate Validation (Optional)" {
+        if (Validation Enabled?) then (yes)
+            :AWS Lambda <$Lambda> "AthenaQueryLambda" receives S3 path;
+            :AWS Lambda <$Lambda> "AthenaQueryLambda" executes SQL queries via Amazon Athena <$Athena>;
+            note right: Athena queries Glue Data Catalog over S3 facts
+            :Amazon Athena <$Athena> returns query results;
+            :AWS Lambda <$Lambda> "AthenaQueryLambda" signals Step Functions <$StepFunctions> (Validation Status);
+        else (no)
+            ' Skip validation
+        endif
+    }
+
+    partition "Stage 4: Graph Transformation" {
+        :AWS Glue <$Glue> "GraphTransformationGlueJob" receives S3 path;
+        :AWS Glue <$Glue> "GlueJob" reads JSON facts from S3 <$S3>;
+        :AWS Glue <$Glue> "GlueJob" maps data to Neptune graph schema;
+        :AWS Glue <$Glue> "GlueJob" generates Neptune-formatted CSV files;
+        :AWS Glue <$Glue> "GlueJob" writes CSVs to S3 <$S3> Neptune Load Files Staging;
+        note right: s3://loyalty-rules-neptune-load-files/
+        :AWS Glue <$Glue> "GlueJob" signals Step Functions <$StepFunctions> (Task Completion);
+    }
+
+    partition "Stage 5: Neptune Bulk Load & Monitoring" {
+        :AWS Lambda <$Lambda> "NeptuneLoadInitiatorLambda" receives S3 path;
+        :AWS Lambda <$Lambda> "NeptuneLoadInitiatorLambda" initiates Neptune <$Neptune> bulk load;
+        :Amazon Neptune <$Neptune> returns `loadId`;
+        :AWS Lambda <$Lambda> "NeptuneLoadInitiatorLambda" returns `loadId` to Step Functions <$StepFunctions>;
+        repeat
+            :AWS Lambda <$Lambda> "NeptuneLoadMonitorLambda" checks load status;
+            note right: with `loadId`
+            :AWS Lambda <$Lambda> "NeptuneLoadMonitorLambda" queries Amazon Neptune <$Neptune>;
+            :Amazon Neptune <$Neptune> returns load status;
+        repeat while (Load In Progress?) is (yes)
+        -> Load Complete;
+        :AWS Lambda <$Lambda> "NeptuneLoadMonitorLambda" signals Step Functions <$StepFunctions> (Final Load Status);
+    }
+
+    partition "Stage 6: Finalization" {
+        :AWS Lambda <$Lambda> "FinalizationLogic" receives final load status;
+        if (Load Successful?) then (yes)
+            :AWS Lambda <$Lambda> "FinalizationLogic" moves original S3 <$S3> file to Archive;
+            :AWS Lambda <$Lambda> "FinalizationLogic" sends success notification via SNS <$SNS> (PipelineCompletionTopic);
+        else (no - Load Failed)
+            :AWS Lambda <$Lambda> "FinalizationLogic" moves original S3 <$S3> file to Error;
+            :AWS Lambda <$Lambda> "FinalizationLogic" logs Neptune <$Neptune> load errors;
+            :AWS Lambda <$Lambda> "FinalizationLogic" sends failure notification via SNS <$SNS> (PipelineCompletionTopic);
+        endif
+        :Amazon SNS <$SNS> (PipelineCompletionTopic) delivers notification to "Data Curator"/Ops;
+    }
+}
+stop
+
+' General Note: All Lambda, Glue, Step Functions interactions are logged to Amazon CloudWatch <$CloudWatch> (not shown explicitly in flow for brevity).
+
+@enduml
